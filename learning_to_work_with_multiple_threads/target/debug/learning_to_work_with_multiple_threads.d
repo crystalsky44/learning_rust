@@ -1,0 +1,1 @@
+/Users/yoshi/rustProjects/learning_to_work_with_multiple_threads/target/debug/learning_to_work_with_multiple_threads: /Users/yoshi/rustProjects/learning_to_work_with_multiple_threads/src/main.rs

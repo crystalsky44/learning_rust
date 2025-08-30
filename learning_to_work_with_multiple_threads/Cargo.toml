@@ -1,0 +1,6 @@
+[package]
+name = "learning_to_work_with_multiple_threads"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
