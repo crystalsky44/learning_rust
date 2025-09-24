@@ -1,2 +1,12 @@
-*.[oa]
+debug
+target
+
+*.[ados]
+
+**/*.rs.bk
+
+*.pdb
+
+**/mutants.out*/
+
 *~
