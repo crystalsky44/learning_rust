@@ -1,0 +1,62 @@
+what was binary search?
+
+an algorithm that takes an sorted arrray and returns the position of an element
+in search, or returns nothing when not found in the array
+
+so, the final return value should be the value of the position which means every
+recursion should return a poisition value as well
+
+
+now one things I have to check first is the definition of binary search because
+my base case and recursie case lies on the assumption of what binary search is 
+
+
+programming "Recursive binary search"
+Output: the position of an array which value matches with the key's value
+
+Input: sorted list, value to search
+
+Restriction: find the value recursively (or using a recursive function)
+
+1. find the middle position of an array
+2. compare the value in the middle position of the array
+    3. if it matches, return the position (or return the middle value)
+    4. if the key is greater, assign the middle value to the low and calculate
+    the middle of the new array created by the new low value and the existing
+    high value
+    5. if the key is smaller, reverse the low and high of above
+6. go back to 1
+
+describe your problem
+
+the problem is, there's a chance that my recursive case never reaches the base
+case.
+
+why is this a problem? because it'll infinitely recurse when the recursing
+function cannot reach its base case
+
+describe your problem more precisely
+
+the case when the this recursing function never reaches its base is when the
+list is left with two elements and when the value that matches with the key's
+value is stored at index 1
+
+why does the above case cause the function to NOT reach the base case?
+
+the index is 0 and 1. when the matching value is in index 1, the if else block
+can drain the element in index 0 and makes the list to only left with a single
+element, which will be index 0, which is the base case. On the other hand. When
+the list is left with index 0 and 1 and the value at index 0 matches the value
+of the key, the current code will return the return value
+first, what does "return value" do in the third arm of if else block?
+
+i think this is where my idea is not solid
+
+middle assigned of the return value of recursive_binary(vec[ 0, 1 ], key = 0)
+
+high is 1 (2 - 1)
+low is 0
+middle is high(1) / 2, which is 0
+
+vec[0] equals key, so returns middle, which is 0 and will not go into function
+once more
