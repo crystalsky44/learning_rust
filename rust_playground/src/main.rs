@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use std::fs::File;
-use std::io::BufWriter;
-// use std::path::Path;
+use std::fs::{File, OpenOptions};
+use std::io::{BufWriter, BufReader};
+use std::path::Path;
 use std::io;
 use std::io::Write;
 
@@ -22,7 +22,6 @@ enum Status {
 }
 */
 
-/*
 fn read_tasks_from_file<P: AsRef<Path>>(path: P) -> Vec<Task> {
     let file = File::open(path).unwrap();
     let reader = BufReader::new(file);
@@ -31,19 +30,50 @@ fn read_tasks_from_file<P: AsRef<Path>>(path: P) -> Vec<Task> {
 
     tasks
 }
-*/
 
 fn main() {
-    let tasks = task_input();
+    let task = task_input();
 
-    // let tasks = read_tasks_from_file("task.json");
+
 
     // let jsoned_tasks = serde_json::to_string_pretty(&tasks).unwrap();
 
-    let json_file = File::create_new("task.json").unwrap();
-    let writer = BufWriter::new(json_file);
+    /*
+    match File::create_new("task.json") {
+        Ok(mut json_file) => {
+            let writer = BufWriter::new(json_file);
+            serde_json::ser::to_writer_pretty(json_file, &tasks).unwrap();
+        }  
 
-    serde_json::to_writer_pretty(writer, &tasks).unwrap();
+        Err(_) => {
+            let json_file = File::open("task.json").unwrap();
+            let reader = BufReader::new(json_file);
+
+            let tasks = serde_json::from_reader(reader).unwrap();
+        }
+    };
+    */
+
+    if let Ok(new_json_file) = File::create_new("task.json") {
+            let writer = BufWriter::new(new_json_file);
+            let task_vec: Vec<Task> = vec![task];
+
+            serde_json::ser::to_writer_pretty(writer, &task_vec).unwrap();
+
+            println!("loaded to file");
+            return
+    }
+
+    let mut task_vec = read_tasks_from_file("task.json");
+    task_vec.push(task);
+
+    let json_file = OpenOptions::new()
+        .write(true)
+        .open("task.json")
+        .unwrap();
+
+    let writer = BufWriter::new(json_file);
+    serde_json::to_writer_pretty(writer, &task_vec).unwrap();
 
     println!("loaded to file");
 }

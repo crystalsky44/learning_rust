@@ -1,4 +1,10 @@
-{
-  "title": "task1",
-  "description": "hello world"
-}
+[
+  {
+    "title": "task 1",
+    "description": "hello world"
+  },
+  {
+    "title": "task2",
+    "description": "want it to work"
+  }
+]
