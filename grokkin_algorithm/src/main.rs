@@ -1,80 +1,38 @@
-use std::cmp::Ordering;
+#![warn(clippy::pedantic)]
+
+use std::collections::{HashMap, VecDeque};
 
 fn main() {
-    // input: sorted, or not sorted list
-    // output: sorted list
-
-    // let mut vec: Vec<u32> = vec![87];
-    // let mut vec: Vec<u32> = vec![87, 37];
-    let mut vec: Vec<u32> = vec![87, 37, 92, 76, 57, 58, 4, 99, 65, 13];
-
-    vec = quick_sort(vec);
-    println!("After sort: {vec:?}");
+   let result = run().expect("something went wrong");
+   println!("{result}");
 }
 
-fn quick_sort(mut vec: Vec<u32>) -> Vec<u32> {
-    // when there are only two elements in the list,
-    // compare the first with the second, and if it was
-    // greater, swap. if smaller or equal to, return vec
-    //
-    // one thing I was considering here was, should I use a match of if blocks?
+fn run() -> Result<String> {
+    let neighbors_network = HashMap::from([
+        ("you", Some(vec!["alice", "bob", "claire"])),
+        ("bob", Some(vec!["anuj", "peggy"])),
+        ("alice", Some(vec!["peggy"])),
+        // ("claire", Some(vec!["thom", "jonny"])),
+        // ("anuj", None),
+        // ("peggy", None),
+        // ("thom", None),
+        ("jonny", None)
+    ]);
 
-    match vec.len().cmp(&2) {
-        Ordering::Less => {
-            println!("You're in the Less!");
-            return vec
-        },
+    let mut neighbor_deque: VecDeque<&str> = VecDeque::new(); 
+    neighbor_deque.push_back("you");
 
-        Ordering::Equal => {
-            println!("You're in the Equal!");
+    for key in neighbor_deque {
+        if key.ends_with("m") {
+            return Ok(String::from("Found the mango seller!"))
+        }
 
-            if vec[0] > vec[1] {
-                vec.swap(0 ,1);
-            }
-            return vec
-        },
+        let Some(neighbors) = get_neighbors(key) else {
+            continue
+        }
 
-        Ordering::Greater => {
-            println!("You're in the Greater!");
-        
-            // choose a pivot (this program's case, vec[0])
-            // creating a maximum of two sub arrays
-            // vec_left = element's value smaller than pivot
-            // vec_right = element's value greater than pivot
-
-            // create, find, or something to concatinate
-            // vec_left + pivot(vec[0]) + vec_right
-
-            // since pivot is a single element, why don't I just push(pivot) it?
-            
-            // there's a chance one of the Vector might not be used
-            // should I implement the creating of vec with dependence?
-
-            // let pivot = vec[0]; *this line won't work, because it doesn't
-            // reduce the problem
-            let pivot = vec.pop().unwrap();
-
-            let mut vec_less: Vec<u32> = Vec::new();
-            let mut vec_greater: Vec<u32> = Vec::new();
-
-            for element in &vec {
-                println!("in the for loop: {element}");
-                if *element > pivot {
-                    vec_greater.push(*element);
-                } else {
-                    vec_less.push(*element);
-                }
-            }
-
-            let mut vec_less = quick_sort(vec_less);
-            println!("in between two sorts");
-            let vec_greater = quick_sort(vec_greater);
-            vec_less.push(pivot);
-            vec_less.extend(vec_greater);
-
-            vec = vec_less;
-
-        },
+        add_neighbors_to_que(&mut neighbor_deque, neighbors);
     }
-    vec
+
+    Ok(String::from("No mango seller near by..."))
 }

@@ -1,0 +1,4 @@
+hello world
+adding some lines so that
+i can test if the current function
+would read the entire file.

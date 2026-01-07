@@ -1,10 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 use std::fs::{File, OpenOptions};
-use std::io::{BufWriter, BufReader};
-use std::path::Path;
 use std::io;
-use std::io::Write;
+use std::io::{BufWriter, BufReader, Write};
+use std::path::Path;
 
 #[derive(Deserialize, Serialize, Debug)]
 struct Task {
@@ -22,80 +21,55 @@ enum Status {
 }
 */
 
-fn read_tasks_from_file<P: AsRef<Path>>(path: P) -> Vec<Task> {
-    let file = File::open(path).unwrap();
-    let reader = BufReader::new(file);
-
-    let tasks: Vec<Task> = serde_json::from_reader(reader).unwrap();
-
-    tasks
-}
-
 fn main() {
     let task = task_input();
+    let task_path = "task.json";
 
-
-
-    // let jsoned_tasks = serde_json::to_string_pretty(&tasks).unwrap();
-
-    /*
-    match File::create_new("task.json") {
-        Ok(mut json_file) => {
-            let writer = BufWriter::new(json_file);
-            serde_json::ser::to_writer_pretty(json_file, &tasks).unwrap();
-        }  
-
-        Err(_) => {
-            let json_file = File::open("task.json").unwrap();
-            let reader = BufReader::new(json_file);
-
-            let tasks = serde_json::from_reader(reader).unwrap();
-        }
-    };
-    */
-
-    if let Ok(new_json_file) = File::create_new("task.json") {
-            let writer = BufWriter::new(new_json_file);
-            let task_vec: Vec<Task> = vec![task];
-
-            serde_json::ser::to_writer_pretty(writer, &task_vec).unwrap();
-
-            println!("loaded to file");
-            return
+    match File::create_new(task_path) {
+        Ok(_) => write_task_to_file(task_path, &vec![task]),
+        Err(_) => append_task(task_path, task),
     }
-
-    let mut task_vec = read_tasks_from_file("task.json");
-    task_vec.push(task);
-
-    let json_file = OpenOptions::new()
-        .write(true)
-        .open("task.json")
-        .unwrap();
-
-    let writer = BufWriter::new(json_file);
-    serde_json::to_writer_pretty(writer, &task_vec).unwrap();
 
     println!("loaded to file");
 }
 
-fn task_input() -> Task {
-    print!("input a title: ");
-    let mut title_input = String::new();
-    input(&mut title_input);
-    title_input = title_input.trim_end().to_string();
+fn append_task(path: impl AsRef<Path>, task: Task) {
+    let file = File::open(&path).unwrap();
+    let reader = BufReader::new(file);
 
-    print!("input a description: ");
-    let mut description_input = String::new();
-    input(&mut description_input);
-    description_input = description_input.trim_end().to_string();
+    let mut task_vec: Vec<Task> = serde_json::from_reader(reader).unwrap();
+    task_vec.push(task);
+
+    write_task_to_file(&path, &task_vec);
+}
+
+fn write_task_to_file(path: impl AsRef<Path>, task_vec: &Vec<Task>) {
+    let json_file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(path)
+        .unwrap();
+
+    let writer = BufWriter::new(json_file);
+    serde_json::to_writer_pretty(writer, &task_vec).unwrap();
+}
+
+fn task_input() -> Task {
+    let title = input("input a title:");
+    let description = input("input a description:");
 
     Task {
-        title: title_input,
-        description: description_input,
+        title,
+        description,
     }
 }
 
-fn input(input: &mut String) {
+fn input(field: &str) -> String {
+    print!("{field} ");
+
+    let mut input = String::new();
     io::stdout().flush().unwrap();
-    io::stdin().read_line(input).unwrap();
+    io::stdin().read_line(&mut input).unwrap();
+
+    input.trim_end().to_string()
 }
