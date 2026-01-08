@@ -1,22 +1,22 @@
 #![warn(clippy::pedantic)]
 
 use std::collections::{HashMap, VecDeque};
+use std::hash::BuildHasher;
 
-fn get_neighbors<'a>(key: &str, neighbors_network: HashMap<&str, Option<Vec<&'a str>>>) ->
-Option<Vec<&'a str>> {
-    match neighbors_network.get(key).expect("check your key") {
-        Some(neighbors) => {
-            println!("{neighbors_network:?}");
-            Some(neighbors.clone())
-        },
-        None => {
-            println!("No one found!");
-            None
-        }
+pub fn get_neighbors<'a, S: BuildHasher>(
+    key: &str, 
+    neighbors_network: &HashMap<&str, Option<Vec<&'a str>>, S>
+) -> Option<Vec<&'a str>> {
+    if let Some(neighbors) = neighbors_network.get(key).expect("check your key") {
+        println!("Neighbors found from {key}!");
+        Some(neighbors.clone())
+    } else {
+        println!("No neighbors from {key}...");
+        None
     }
 }
 
-fn add_neighbors_to_que<'a>(neighbor_deque: &mut VecDeque<&'a str>, neighbors: Vec<&'a str>) {
+pub fn add_neighbors_to_que<'a>(neighbor_deque: &mut VecDeque<&'a str>, neighbors: Vec<&'a str>) {
     for neighbor in neighbors {
         neighbor_deque.push_back(neighbor);
     }
