@@ -18,6 +18,10 @@ pub fn get_neighbors<'a, S: BuildHasher>(
 
 pub fn add_neighbors_to_que<'a>(neighbor_deque: &mut VecDeque<&'a str>, neighbors: Vec<&'a str>) {
     for neighbor in neighbors {
+        if neighbor_deque.contains(&neighbor) {
+            continue
+        }
+
         neighbor_deque.push_back(neighbor);
     }
 }

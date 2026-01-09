@@ -22,16 +22,14 @@ fn run() -> String {
         ("jonny", None)
     ]);
 
-    let mut neighbor_deque: VecDeque<&str> = VecDeque::new(); 
-    neighbor_deque.push_back("you");
+    let mut neighbor_deque = VecDeque::from(["you"]); 
 
     while !neighbor_deque.is_empty() {
         let investigation_subject = neighbor_deque.pop_front().expect("no que");
 
         if investigation_subject.ends_with('m') {
             println!();
-            print!("{investigation_subject}");
-            return String::from(" is the mango seller!")
+            return String::from(investigation_subject.to_owned() + " is the mango seller!")
         }
 
         let Some(neighbors) = get_neighbors(investigation_subject, &neighbors_network) else {
@@ -41,7 +39,7 @@ fn run() -> String {
         add_neighbors_to_que(&mut neighbor_deque, neighbors);
         /*
         for out_neighbor in neighbors {
-            neighbor_deque.push_back(neighbor);
+            neighbor_deque.push_back(out_neighbor);
         }
         */
     }
