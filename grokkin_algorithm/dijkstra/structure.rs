@@ -11,6 +11,18 @@ fn main() {
 fn run() -> String {
     // untill there is no node to process, loop
 
+    let base_graph = ;
+    let mut cost_container = ;
+    let mut parent_container = ;
+
+    
+
+}
+
+// lib.rs
+
+fn get_data() {
+
 }
 
 fn find_cheapest_node() {}
@@ -20,3 +32,5 @@ fn check_cost() {}
 fn update_cost() {}
 
 fn update_parent() {}
+
+fn result_to_string() -> String {}
