@@ -1,7 +1,13 @@
-#![warning(clippy::pedantic)]
+#![warn(clippy::pedantic)]
+
+use std::collections::HashMap;
 
 use grokkin_algorithm::dijkstra::*;
 
 fn main() {
-    println!("Hello, world!");
+    let base_graph = HashMap::from([]);
+
+    let result = run(&base_graph);
+
+    println!("{result}");
 }
