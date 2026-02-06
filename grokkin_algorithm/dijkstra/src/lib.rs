@@ -42,7 +42,7 @@ fn run(graph: &Graph) -> String {
     // repeat the above flow until there is no more node to process
     // repeats on processing node
     
-    // format the result (in String type)
+
     let result = format(cost_container, parent_container);
 
     // return result
