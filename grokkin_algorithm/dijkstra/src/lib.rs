@@ -7,27 +7,32 @@ use std::collections::HashMap;
 
 type Graph<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
-struct RoutingTable {
-    cheapest_cost: HashMap<String, u32>,
-    cheapest_parent: HashMap<String, String>,
+struct CheapestRoute {
+    cost: HashMap<String, u32>,
+    parent: HashMap<String, String>,
 }
 
-impl RoutingTable {
-    fn new () -> RoutingTable {
+impl CheapestRoute {
+    fn new () -> Self {
         Self {
-            cheapest_cost: HashMap::new(),
-            cheapest_parent: HashMap::new(),
+            cost: HashMap::new(), // does this need to be a HashMap?
+            parent: HashMap::new(),
         }
     }
 
-    fn register_cost() {
+    // registers the cost if the path through the passed node is the cheapest
+    pub fn register_cost(node: HashMap<&str, u32>) {
         todo!();
     }
 
+    // tracks the route of the cheapest cost 
     fn track_route() {
         todo!();
     }
 
+    // returns the result after evaluation (indicator to whether evaluation of
+    // the subject graph is complete, should be implemented in the struct, 
+    // but for simplicity and time's sake, I will refrain from it.
     pub fn get_result() -> String {
         todo!();
     }
@@ -35,33 +40,26 @@ impl RoutingTable {
 
 fn run(graph: &Graph) -> String {
     let keys: Vec<&str> = graph.keys().map(|key| *key).collect();
-    let cheapest_pairs = RoutingTable::new();
+    let cheapest_route = RoutingTable::new();
 
-    let starting_key = get_starting_key(graph);
+    let (processing_key, _finish_key) = get_starting_key(graph);
 
     todo!()
 
-    /* add to later compiling
-
-    // using while loop because I want control over the keys I want to pass to
-    // .register_cost()
+    // operate until there's no more key to process
     while !keys.is_empty() {
-        // extracts the parent node and its child node(s) from the graph
-        // get the cost (or costs) of the path(s) from parent node to each child node
-        let node_in_progress = graph.get(keys);
+        // get the node to process
 
-        // save the cost(s) of the path(s) if the cost to the child node is the cheapest
-        // save the parent and child pair of the cheapest path
-        cheapest_pairs.register_cost(parent_child_pair);
+        // try registering the costs 
+
     }
 
-    // format the cheapest cost and their parent child pairs into String 
-    let result = format_to_result(cheapest_pairs);
+    // assign the result in String type
+    let result = cheapest_route.get_result();
 
     // return a String data containing the information of the cheapest paths
     result
 
-    */
 }
 
 fn get_starting_key<'a>(graph: &'a Graph<'a>) -> (&'a str, &'a str) {
@@ -74,7 +72,9 @@ fn get_starting_key<'a>(graph: &'a Graph<'a>) -> (&'a str, &'a str) {
 
     // push every child keys into a single list
     // delete the duplicates (or don't push if it already exists in the list)
+    let mut starting_key: Option<&str> = None;
     let mut finish_key: Option<&str> = None;
+
     for &node in &nodes {
         let out_neighbors = graph.get(node).expect("out_neighbors");
         if out_neighbors.is_empty() {
@@ -87,18 +87,15 @@ fn get_starting_key<'a>(graph: &'a Graph<'a>) -> (&'a str, &'a str) {
                 out_neighbor_keys.push(*key);
             }
         }
-    }
-    // println!("list of out neigbors' key: {out_neighbor_keys:?}");
 
-    // compare the list of child keys and the list of parent keys
-    // and one element (it should be one element) that's not listed
-    // in the child keys will be the starting node
-    let mut starting_key: Option<&str> = None;
-    for &node in &nodes {
+        // compare the list of child keys and the list of parent keys
+        // and one element (it should be one element) that's not listed
+        // in the child keys will be the starting node
         if !out_neighbor_keys.contains(&node) {
             starting_key = Some(node);
         }
     }
+    // println!("list of out neigbors' key: {out_neighbor_keys:?}");
 
     (starting_key.expect("error"), finish_key.expect("error"))
 }
