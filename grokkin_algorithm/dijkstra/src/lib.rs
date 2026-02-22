@@ -13,7 +13,7 @@ struct CheapestRoute {
 }
 
 impl CheapestRoute {
-    fn new () -> CheapestRoute {
+    fn new() -> CheapestRoute {
         Self {
             cost: HashMap::new(), // does this need to be a HashMap?
             parent: HashMap::new(),
@@ -25,29 +25,50 @@ impl CheapestRoute {
         // check entries of the table
         if self.cost.is_empty() {
             for (out_neighbor, cost) in node {
+                // no entry => insert the cost and return
                 self.cost.insert(out_neighbor.to_string(), *cost);
             }
-        }
+        } else {
+            // has entry =>
+            // check if the  current node has an out neigbor that's already in the table
+            // no => only insert,
+            let keys_in_table: Vec<String> = self.cost
+                .keys()
+                .map(|key| key.clone())
+                .collect();
 
-        // no entry => insert the cost and return
-        // has entry => 
-            // 1. add the cost to the existing entry and the cost to current
+            for (&out_neighbor, &cost) in node {
+                let out_neighbor = out_neighbor.to_string();
+
+                if !keys_in_table.contains(&out_neighbor) {
+                    self.cost.insert(out_neighbor, cost);
+                }
+            }
+            // yes => compare if the cost to exisiting out neigbor is cheaper from the current
+            // node, or the node prior to current node
+            // 1. add the cost of existing entry and the cost of current
             //    processing node
+
+            // let cost_of_processing_node = node.get(out_neighbor_key).unwrap();
+
+            // let total_current_cost = cost_in_table + cost_of_processing_node;
+
             // 2. compare the result from step 1 and the existing entry
             // 3. step 2::equal => do nothing,
             //    step 2::result is greater => do nothing,
             //    step 2::result is smaller => replace the value with the result
+        }
 
         // repeat as many out neighbors
     }
 
-    // tracks the route of the cheapest cost 
+    // tracks the route of the cheapest cost
     fn track_route() {
         todo!();
     }
 
     // returns the result after evaluation (indicator to whether evaluation of
-    // the subject graph is complete, should be implemented in the struct, 
+    // the subject graph is complete, should be implemented in the struct,
     // but for simplicity and time's sake, I will refrain from it.
     pub fn get_result() -> String {
         todo!();
@@ -61,28 +82,28 @@ fn run(graph: &Graph) -> String {
     let (processing_key, _finish_key) = get_starting_key(graph);
 
     todo!()
-/*
-    // operate until there's no more key to process
-    while !keys.is_empty() {
-        // get the node to process
-        let processing_node = graph.get(processing_key).unwrap();
+    /*
+        // operate until there's no more key to process
+        while !keys.is_empty() {
+            // get the node to process
+            let processing_node = graph.get(processing_key).unwrap();
 
-        // try registering the costs 
+            // try registering the costs
 
-        // pop the processing key from keys list
-        keys.pop(processing_key); // will this even work...??
+            // pop the processing key from keys list
+            keys.pop(processing_key); // will this even work...??
 
-        // assign the next processing key
-        processing_key =  
+            // assign the next processing key
+            processing_key =
 
-    }
+        }
 
-    // assign the result in String type
-    let result = cheapest_route.get_result();
+        // assign the result in String type
+        let result = cheapest_route.get_result();
 
-    // return a String data containing the information of the cheapest paths
-    result
-*/
+        // return a String data containing the information of the cheapest paths
+        result
+    */
 }
 
 // gets the key for next process
@@ -151,7 +172,7 @@ mod tests {
             ("start", HashMap::from([("a", 6), ("b", 2)])),
             ("a", HashMap::from([("finish", 2)])),
             ("b", HashMap::from([("a", 3), ("finish", 7)])),
-            ("finish", HashMap::new())
+            ("finish", HashMap::new()),
         ]);
 
         let (starting_key, finish_key) = get_starting_key(&graph);
@@ -160,18 +181,33 @@ mod tests {
     }
     #[test]
     fn register_cost() {
-       let test_input = HashMap::from([
-           ("a", 3_u32),
-           ("b", 4_u32)
-       ]);
-       let mut cheapest_route = CheapestRoute::new();
+        let test_input = HashMap::from([("a", 3_u32), ("b", 4_u32)]);
+        let mut cheapest_route = CheapestRoute::new();
 
-       cheapest_route.register_cost(&test_input);
+        cheapest_route.register_cost(&test_input);
+        let test_output = HashMap::from([
+            ("a".to_string(), 3_u32),
+            ("b".to_string(), 4_u32)
+        ]);
 
-       let test_output = HashMap::from([
-           ("a".to_string(), 3_u32),
-           ("b".to_string(), 4_u32)
-       ]);
-       assert_eq!(test_output, cheapest_route.cost);
+        assert_eq!(test_output, cheapest_route.cost);
+    }
+    #[test]
+    fn register_cost_case_two() {
+        let test_input = HashMap::from([("a", 3_u32), ("b", 4_u32)]);
+        let mut cheapest_route = CheapestRoute {
+            cost: HashMap::from([("c".to_string(), 5_u32), ("d".to_string(), 6_u32)]),
+            parent: HashMap::new(),
+        };
+
+        cheapest_route.register_cost(&test_input);
+
+        let test_output = HashMap::from([
+            ("a".to_string(), 3_u32),
+            ("b".to_string(), 4_u32),
+            ("c".to_string(), 5_u32),
+            ("d".to_string(), 6_u32),
+        ]);
+        assert_eq!(test_output, cheapest_route.cost);
     }
 }
