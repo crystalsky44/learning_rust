@@ -21,8 +21,25 @@ impl CheapestRoute {
     }
 
     // registers the cost if the path through the passed node is the cheapest
-    pub fn register_cost(&mut self, node: &HashMap<&str, u32>) {
+    pub fn register_cost(
+        &mut self,
+        processing_key: String,
+        node: &HashMap<&str, u32>
+        ) {
+        for (&out_neighbor, &cost) in node {
+            let out_neighbor = out_neighbor.to_string();
+            let cost_of_current_node = self.cost[&processing_key];
+
+            self.cost.entry(out_neighbor).
+                and_modify(|cost_in_table|
+                    if *cost_in_table > cost_of_current_node + cost {
+                        *cost_in_table = cost_of_current_node + cost;
+                    }
+                )
+                .or_insert(cost);
+            }
         // check entries of the table
+        /*
         if self.cost.is_empty() {
             for (out_neighbor, cost) in node {
                 // no entry => insert the cost and return
@@ -37,29 +54,40 @@ impl CheapestRoute {
                 .map(|key| key.clone())
                 .collect();
 
-            for (&out_neighbor, &cost) in node {
-                let out_neighbor = out_neighbor.to_string();
 
+                /*
                 if !keys_in_table.contains(&out_neighbor) {
                     self.cost.insert(out_neighbor, cost);
                 }
-            }
+            } else {
             // yes => compare if the cost to exisiting out neigbor is cheaper from the current
             // node, or the node prior to current node
-            // 1. add the cost of existing entry and the cost of current
-            //    processing node
 
-            // let cost_of_processing_node = node.get(out_neighbor_key).unwrap();
+                // 1. add the cost of existing entry and the cost of current
+                //    processing node
+                // get cost our from the cost_table
+                let registered_cost = self.cost[out_neighbor];
+                // add the cost to current processing node 
+                // (which cost is found in the existing table)
+                let cost_through_process_node = self.cost[processing_key] + cost; 
 
-            // let total_current_cost = cost_in_table + cost_of_processing_node;
+                // 2. compare the result from step 1 and the existing entry
+                if registered_cost > cost_through_process_node {
 
-            // 2. compare the result from step 1 and the existing entry
+                }
+
+                */
+
+
+            }
+
             // 3. step 2::equal => do nothing,
             //    step 2::result is greater => do nothing,
             //    step 2::result is smaller => replace the value with the result
         }
 
         // repeat as many out neighbors
+    */
     }
 
     // tracks the route of the cheapest cost
@@ -179,6 +207,7 @@ mod tests {
         assert_eq!("start", starting_key);
         assert_eq!("finish", finish_key);
     }
+    /*
     #[test]
     fn register_cost() {
         let test_input = HashMap::from([("a", 3_u32), ("b", 4_u32)]);
@@ -207,6 +236,24 @@ mod tests {
             ("b".to_string(), 4_u32),
             ("c".to_string(), 5_u32),
             ("d".to_string(), 6_u32),
+        ]);
+        assert_eq!(test_output, cheapest_route.cost);
+    }
+    */
+    #[test]
+    fn register_cost_case_three() {
+        let test_input = HashMap::from([("a", 2_u32), ("f", 6_u32)]);
+        let mut cheapest_route = CheapestRoute {
+            cost: HashMap::from([("a".to_string(), 6_u32), ("b".to_string(), 3_u32)]),
+            parent: HashMap::new(),
+        };
+
+        cheapest_route.register_cost("b".to_string(), &test_input);
+
+        let test_output = HashMap::from([
+            ("a".to_string(), 5_u32),
+            ("b".to_string(), 3_u32),
+            ("f".to_string(), 9_u32),
         ]);
         assert_eq!(test_output, cheapest_route.cost);
     }
