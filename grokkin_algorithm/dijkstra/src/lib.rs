@@ -12,6 +12,18 @@ struct CheapestRoute {
     parent: HashMap<String, String>,
 }
 
+struct UpdateSignal(bool);
+
+impl UpdateSignal {
+    fn new() -> {
+        Self(true)
+    }
+
+    fn off() -> {
+        Self(false)
+    }
+}
+
 impl CheapestRoute {
     fn new() -> CheapestRoute {
         Self {
@@ -28,71 +40,46 @@ impl CheapestRoute {
         ) {
         for (&out_neighbor, &cost) in node {
             let out_neighbor = out_neighbor.to_string();
-            let cost_of_current_node = self.cost[&processing_key];
+            let update_signal = UpdateSignal::new();
+
+            // get the cost of current processing node
+            let mut cost_of_current_node = 0_u32;
+            if let Some(cost) = self.cost.get(&processing_key) {
+                cost_of_current_node = *cost;
+            }
 
             self.cost.entry(out_neighbor).
                 and_modify(|cost_in_table|
                     if *cost_in_table > cost_of_current_node + cost {
                         *cost_in_table = cost_of_current_node + cost;
+                    } else {
+                        UpdateSignal::off()
                     }
                 )
-                .or_insert(cost);
+                .or_insert(cost_of_current_node + cost);
             }
         // check entries of the table
-        /*
-        if self.cost.is_empty() {
-            for (out_neighbor, cost) in node {
-                // no entry => insert the cost and return
-                self.cost.insert(out_neighbor.to_string(), *cost);
-            }
-        } else {
-            // has entry =>
-            // check if the  current node has an out neigbor that's already in the table
-            // no => only insert,
-            let keys_in_table: Vec<String> = self.cost
-                .keys()
-                .map(|key| key.clone())
-                .collect();
-
-
-                /*
-                if !keys_in_table.contains(&out_neighbor) {
-                    self.cost.insert(out_neighbor, cost);
-                }
-            } else {
             // yes => compare if the cost to exisiting out neigbor is cheaper from the current
             // node, or the node prior to current node
 
                 // 1. add the cost of existing entry and the cost of current
                 //    processing node
                 // get cost our from the cost_table
-                let registered_cost = self.cost[out_neighbor];
                 // add the cost to current processing node 
                 // (which cost is found in the existing table)
-                let cost_through_process_node = self.cost[processing_key] + cost; 
 
                 // 2. compare the result from step 1 and the existing entry
-                if registered_cost > cost_through_process_node {
-
-                }
-
-                */
-
-
-            }
 
             // 3. step 2::equal => do nothing,
             //    step 2::result is greater => do nothing,
             //    step 2::result is smaller => replace the value with the result
-        }
 
         // repeat as many out neighbors
-    */
     }
 
     // tracks the route of the cheapest cost
-    fn track_route() {
-        todo!();
+    fn track_route(&self) {
+        println!("I am the track router");
     }
 
     // returns the result after evaluation (indicator to whether evaluation of
