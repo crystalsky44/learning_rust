@@ -9,18 +9,19 @@ type Graph<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
 struct CheapestRoute {
     cost: HashMap<String, u32>,
-    parent: HashMap<String, String>,
+    route: HashMap<String, String>,
+    processing_node: String,
 }
 
 struct UpdateSignal(bool);
 
 impl UpdateSignal {
-    fn new() -> {
-        Self(true)
+    fn new() -> Self {
+        Self(false)
     }
 
-    fn off() -> {
-        Self(false)
+    fn on(&mut self) {
+        self.0 = true;
     }
 }
 
@@ -28,36 +29,36 @@ impl CheapestRoute {
     fn new() -> CheapestRoute {
         Self {
             cost: HashMap::new(), // does this need to be a HashMap?
-            parent: HashMap::new(),
+            route: HashMap::new(),
+            processing_node: String::new(),
         }
     }
 
     // registers the cost if the path through the passed node is the cheapest
-    pub fn register_cost(
-        &mut self,
-        processing_key: String,
-        node: &HashMap<&str, u32>
-        ) {
+    pub fn register_cost(&mut self, node: &HashMap<&str, u32>) {
         for (&out_neighbor, &cost) in node {
             let out_neighbor = out_neighbor.to_string();
-            let update_signal = UpdateSignal::new();
+            let mut update_signal = UpdateSignal::new();
 
             // get the cost of current processing node
             let mut cost_of_current_node = 0_u32;
-            if let Some(cost) = self.cost.get(&processing_key) {
+            if let Some(cost) = self.cost.get(&self.processing_node) {
                 cost_of_current_node = *cost;
             }
 
-            self.cost.entry(out_neighbor).
-                and_modify(|cost_in_table|
+            self.cost.entry(out_neighbor)
+                .and_modify(|cost_in_table|
                     if *cost_in_table > cost_of_current_node + cost {
                         *cost_in_table = cost_of_current_node + cost;
-                    } else {
-                        UpdateSignal::off()
-                    }
+                        update_signal.on();
+                    } 
                 )
-                .or_insert(cost_of_current_node + cost);
-            }
+                .or_insert_with(|| {
+                    update_signal.on();
+                    cost_of_current_node + cost
+                });
+            self.track_route(update_signal);
+        }
         // check entries of the table
             // yes => compare if the cost to exisiting out neigbor is cheaper from the current
             // node, or the node prior to current node
@@ -78,8 +79,15 @@ impl CheapestRoute {
     }
 
     // tracks the route of the cheapest cost
-    fn track_route(&self) {
-        println!("I am the track router");
+    fn track_route(&mut self, signal: UpdateSignal) {
+        println!("I am the track router! Signal I got: {}", signal.0);
+        let cost_keys = self.cost.keys();
+        for key in cost_keys {
+            let parent = self.processing_node.clone();
+            self.route.entry(key.clone())
+                .or_insert(parent);
+        }
+        println!("{0:?}", self.route);
     }
 
     // returns the result after evaluation (indicator to whether evaluation of
@@ -229,13 +237,24 @@ mod tests {
     */
     #[test]
     fn register_cost_case_three() {
-        let test_input = HashMap::from([("a", 2_u32), ("f", 6_u32)]);
+        let test_input = HashMap::from([("a", 6_u32), ("b", 3_u32)]);
+        let mut cheapest_route = CheapestRoute {
+            cost: HashMap::new(),
+            route: HashMap::new(),
+            processing_node: String::from("start"),
+        };
+        /*
         let mut cheapest_route = CheapestRoute {
             cost: HashMap::from([("a".to_string(), 6_u32), ("b".to_string(), 3_u32)]),
-            parent: HashMap::new(),
+            route: HashMap::new(),
+            processing_node: String::from("b"),
         };
+        */
+        cheapest_route.register_cost(&test_input);
 
-        cheapest_route.register_cost("b".to_string(), &test_input);
+        let test_input = HashMap::from([("a", 2_u32), ("f", 6_u32)]);
+        cheapest_route.processing_node = String::from("b");
+        cheapest_route.register_cost(&test_input);
 
         let test_output = HashMap::from([
             ("a".to_string(), 5_u32),
@@ -244,4 +263,17 @@ mod tests {
         ]);
         assert_eq!(test_output, cheapest_route.cost);
     }
+    /*
+    #[test]
+    fn tracking_test() {
+        let test_input = HashMap::from([("a", 2_u32), ("f", 6_u32)]);
+        let mut cheapest_route = CheapestRoute {
+            cost: HashMap::from([("a".to_string(), 6_u32), ("b".to_string(), 3_u32)]),
+            route: HashMap::new(),
+            processing_node: String::new(),
+        };
+
+        cheapest_route.register_cost("b".to_string(), &test_input);
+    }
+    */
 }
