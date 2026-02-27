@@ -85,7 +85,8 @@ impl CheapestRoute {
         for key in cost_keys {
             let parent = self.processing_node.clone();
             self.route.entry(key.clone())
-                .and_modify(|current_parent| if *current_parent != parent {
+                .and_modify(|current_parent| if *key != parent {
+                    println!("inside and_modify: {current_parent}, {parent}");
                     *current_parent = parent.clone();
                 })
             .or_insert(parent);
