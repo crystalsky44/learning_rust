@@ -13,18 +13,6 @@ struct CheapestRoute {
     processing_node: String,
 }
 
-struct UpdateSignal(bool);
-
-impl UpdateSignal {
-    fn new() -> Self {
-        Self(false)
-    }
-
-    fn on(&mut self) {
-        self.0 = true;
-    }
-}
-
 impl CheapestRoute {
     fn new() -> CheapestRoute {
         Self {
@@ -38,7 +26,6 @@ impl CheapestRoute {
     pub fn register_cost(&mut self, node: &HashMap<&str, u32>) {
         for (&out_neighbor, &cost) in node {
             let out_neighbor = out_neighbor.to_string();
-            let mut update_signal = UpdateSignal::new();
 
             // get the cost of current processing node
             let mut cost_of_current_node = 0_u32;
@@ -50,14 +37,12 @@ impl CheapestRoute {
                 .and_modify(|cost_in_table|
                     if *cost_in_table > cost_of_current_node + cost {
                         *cost_in_table = cost_of_current_node + cost;
-                        update_signal.on();
                     } 
                 )
                 .or_insert_with(|| {
-                    update_signal.on();
                     cost_of_current_node + cost
                 });
-            self.track_route(update_signal);
+            self.track_route();
         }
         // check entries of the table
             // yes => compare if the cost to exisiting out neigbor is cheaper from the current
@@ -79,8 +64,8 @@ impl CheapestRoute {
     }
 
     // tracks the route of the cheapest cost
-    fn track_route(&mut self, signal: UpdateSignal) {
-        println!("I am the track router! Signal I got: {}", signal.0);
+    fn track_route(&mut self) {
+        println!("I am the track router!");
         let cost_keys = self.cost.keys();
         for key in cost_keys {
             let parent = self.processing_node.clone();
@@ -134,15 +119,33 @@ fn run(graph: &Graph) -> String {
 }
 
 // gets the key for next process
-fn next_key(node: HashMap<&str, u32>) -> String {
-    todo!()
-    // get the costs of all out neighbors
+fn next_key(node: &HashMap<&str, u32>) -> String {
+    // by logic, it's impossible for node.len() == 0.
+    // Still, in production code, I should handle it.
+    // But since this is just a practice code, ignoring the 0 case
 
-    // return the cost if only one out negihbor exist
+    if node.len() > 1 {
+        let mut cheapest_cost: Option<u32> = None;
+        let mut next_key = String::new();
 
-    // find the cheapest from the list
+        for (key, &cost) in node {
+            // should only run the first time
+            if let None = cheapest_cost {
+                cheapest_cost = Some(cost);
+            }
 
-    // return the cheapest
+            if cheapest_cost.expect("there should be a u32 data") > cost {
+                cheapest_cost = Some(cost);
+                next_key = key.to_string();
+            }
+        }
+
+        next_key
+    } else {
+        let next_key = node.keys().next().unwrap().to_string();
+        next_key
+    }
+
 }
 
 fn get_starting_key<'a>(graph: &'a Graph<'a>) -> (&'a str, &'a str) {
@@ -266,6 +269,15 @@ mod tests {
             ("f".to_string(), 9_u32),
         ]);
         assert_eq!(test_output, cheapest_route.cost);
+    }
+    #[test]
+    fn get_key() {
+        let test_input = HashMap::from([("f", 6_u32)]);
+
+        let key = next_key(&test_input);
+
+        assert_eq!(key, "a".to_string());
+
     }
     /*
     #[test]
