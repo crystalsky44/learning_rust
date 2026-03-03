@@ -87,36 +87,6 @@ impl CheapestRoute {
     }
 }
 
-fn run(graph: &Graph) -> String {
-    let keys: Vec<&str> = graph.keys().map(|key| *key).collect();
-    let cheapest_route = CheapestRoute::new();
-
-    let (processing_key, _finish_key) = get_starting_key(graph);
-
-    todo!()
-    /*
-        // operate until there's no more key to process
-        while !keys.is_empty() {
-            // get the node to process
-            let processing_node = graph.get(processing_key).unwrap();
-
-            // try registering the costs
-
-            // pop the processing key from keys list
-            keys.pop(processing_key); // will this even work...??
-
-            // assign the next processing key
-            processing_key =
-
-        }
-
-        // assign the result in String type
-        let result = cheapest_route.get_result();
-
-        // return a String data containing the information of the cheapest paths
-        result
-    */
-}
 
 // gets the key for next process
 fn next_key(node: &HashMap<&str, u32>) -> String {
@@ -132,6 +102,7 @@ fn next_key(node: &HashMap<&str, u32>) -> String {
             // should only run the first time
             if let None = cheapest_cost {
                 cheapest_cost = Some(cost);
+                continue
             }
 
             if cheapest_cost.expect("there should be a u32 data") > cost {
@@ -184,6 +155,54 @@ fn get_starting_key<'a>(graph: &'a Graph<'a>) -> (&'a str, &'a str) {
     // println!("list of out neigbors' key: {out_neighbor_keys:?}");
 
     (starting_key.expect("error"), finish_key.expect("error"))
+}
+
+fn run(graph: &Graph) {
+    let mut keys: Vec<&str> = graph.keys().map(|key| *key).collect();
+    println!("0");
+    let (processing_key, finish_key) = get_starting_key(graph);
+    println!("1");
+
+    // let cheapest_route = CheapestRoute::new();
+    let test_cost_table = HashMap::from([
+        ("start", 0_u32),
+        ("a", 3_u32),
+        ("b", 4_u32),
+        ("finish", 7)
+    ]);
+    println!("2");
+
+    // operate until there's no more key to process
+    while !keys.is_empty() {
+        println!("in loop");
+        // get the node to process
+        // let processing_node = graph.get(processing_key).unwrap();
+
+        // try registering the costs
+
+        // pop the processing key from keys list
+        // 1. iterate over the keys and remove the element that matches processing_key
+        // 2. create another vec to store used keys and only process the keys not in the vec
+        // 3. modify the processed key and iterate over the elements without modification
+        for (index, key) in keys.clone().into_iter().enumerate() {
+            if key == processing_key {
+                println!("in if");
+                keys.remove(index);
+            }
+        }
+
+        let processing_key = &next_key(&test_cost_table);
+        // assign the next processing key
+
+    }
+
+    println!("Loop ended!");
+
+    // assign the result in String type
+    // let result = cheapest_route.get_result();
+
+    // return a String data containing the information of the cheapest paths
+    // result
 }
 
 #[cfg(test)]
@@ -279,17 +298,16 @@ mod tests {
         assert_eq!(key, "a".to_string());
 
     }
-    /*
     #[test]
-    fn tracking_test() {
-        let test_input = HashMap::from([("a", 2_u32), ("f", 6_u32)]);
-        let mut cheapest_route = CheapestRoute {
-            cost: HashMap::from([("a".to_string(), 6_u32), ("b".to_string(), 3_u32)]),
-            route: HashMap::new(),
-            processing_node: String::new(),
-        };
+    fn demo_run() {
+        type Graph<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
+        let graph: Graph = HashMap::from([
+            ("start", HashMap::from([("a", 6), ("b", 2)])),
+            ("a", HashMap::from([("finish", 1)])),
+            ("b", HashMap::from([("a", 3), ("finish", 5)])),
+            ("finish", HashMap::new())
+        ]);
 
-        cheapest_route.register_cost("b".to_string(), &test_input);
+        run(&graph);
     }
-    */
 }
