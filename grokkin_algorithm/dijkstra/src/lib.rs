@@ -89,37 +89,16 @@ impl CheapestRoute {
 
 
 // gets the key for next process
-fn next_key(node: &HashMap<&str, u32>) -> String {
-    // by logic, it's impossible for node.len() == 0.
-    // Still, in production code, I should handle it.
-    // But since this is just a practice code, ignoring the 0 case
+// it is either the out-neighbor of the cheapest path of current processing node
+// or if it doen't have an out-neighbor anymore, not processed node. 
+// (but the latter sirtuation will not be considered in this project)
+fn next_key(processing_node: &HashMap<&str, u32>) -> String {
+    for (key, value) in processing_node {
 
-    if node.len() > 1 {
-        let mut cheapest_cost: Option<u32> = None;
-        let mut next_key = String::new();
-
-        for (key, &cost) in node {
-            // should only run the first time
-            if let None = cheapest_cost {
-                cheapest_cost = Some(cost);
-                continue
-            }
-
-            if cheapest_cost.expect("there should be a u32 data") > cost {
-                cheapest_cost = Some(cost);
-                next_key = key.to_string();
-            }
-        }
-
-        next_key
-    } else {
-        let next_key = node.keys().next().unwrap().to_string();
-        next_key
     }
-
 }
 
-fn get_starting_key<'a>(graph: &'a Graph<'a>) -> (&'a str, &'a str) {
+fn get_starting_key<'a>(graph: &Graph) -> (String, String) {
     // get a list that lists the every key of the graph
     let nodes: Vec<&str> = graph.keys().map(|key| *key).collect();
     // println!("{nodes:?}");
@@ -154,14 +133,16 @@ fn get_starting_key<'a>(graph: &'a Graph<'a>) -> (&'a str, &'a str) {
     }
     // println!("list of out neigbors' key: {out_neighbor_keys:?}");
 
-    (starting_key.expect("error"), finish_key.expect("error"))
+    (starting_key.expect("error").to_string(), finish_key.expect("error").to_string())
 }
 
 fn run(graph: &Graph) {
-    let mut keys: Vec<&str> = graph.keys().map(|key| *key).collect();
+    let mut keys: Vec<String> = graph.keys().map(|key| key.to_string()).collect();
     println!("0");
-    let (processing_key, finish_key) = get_starting_key(graph);
+    let (mut processing_key, finish_key) = get_starting_key(graph);
     println!("1");
+
+    println!("processing_key: {processing_key}");
 
     // let cheapest_route = CheapestRoute::new();
     let test_cost_table = HashMap::from([
@@ -177,8 +158,10 @@ fn run(graph: &Graph) {
         println!("in loop");
         // get the node to process
         // let processing_node = graph.get(processing_key).unwrap();
+        println!("processing_key: {processing_key}");
 
         // try registering the costs
+        println!("before if: {keys:?}");
 
         // pop the processing key from keys list
         // 1. iterate over the keys and remove the element that matches processing_key
@@ -186,14 +169,18 @@ fn run(graph: &Graph) {
         // 3. modify the processed key and iterate over the elements without modification
         for (index, key) in keys.clone().into_iter().enumerate() {
             if key == processing_key {
-                println!("in if");
                 keys.remove(index);
+                println!("in if: {keys:?}");
             }
         }
 
-        let processing_key = &next_key(&test_cost_table);
+        println!("{keys:?}");
+        println!("before next_key: {processing_key}");
+        processing_key = next_key(&test_cost_table, &keys);
+        println!("after next_key: {processing_key}");
         // assign the next processing key
 
+        keys.pop();
     }
 
     println!("Loop ended!");
@@ -289,6 +276,7 @@ mod tests {
         ]);
         assert_eq!(test_output, cheapest_route.cost);
     }
+    /*
     #[test]
     fn get_key() {
         let test_input = HashMap::from([("f", 6_u32)]);
@@ -298,6 +286,7 @@ mod tests {
         assert_eq!(key, "a".to_string());
 
     }
+    */
     #[test]
     fn demo_run() {
         type Graph<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
