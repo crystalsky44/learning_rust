@@ -1,71 +1,296 @@
-// Data Types for the project
-// Input Graph:
-// Graph = HashMap<&str, HashMap<&str, u32>>
-//
-// Cost Container:
-// HashMap<String, u32>
-//
-// Parent Container:
-// HashMap<String, String>
-// 
-type Graph = HashMap<&str, HashMap<&str, u32>>;
+// dijkstr lib.rs (3rd one)
 
-struct ParentChildPair {
-    parent: String,
-    children: HashMap<&str, u32>,
+// the goal of this program (Dijkstra Algorithm) is to calculate the shortest
+// path from a given graph
+
+use std::collections::HashMap;
+
+type Graph<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
+
+struct CheapestRoute {
+    cost: HashMap<String, u32>,
+    route: HashMap<String, String>,
+    processing_node: String,
 }
 
-impl for ParentChildPair {
-    fn new(&graph) -> ParentChildPair {
-
-    }
-}
-
-// runs the logic of algorithm
-fn run(graph: &Graph) -> String {
-    // container declaration
-    let cost_container: HashMap<String, u32> = HashMap::new();
-    let parent_container: HashMap<String, String> = HashMap::new();
-
-    // get the processing node from the Graph and its child nodes
-    // the start of loop
-    for (process_node, child_nodes) in graph {
-        // create the data structure to pass around
-        parent_child = ParentChildPair::new();
-
-        // update the costs in cost_container
-        if let Ok(better_pair: Vec<CheapPair>) = update_cost(child_nodes, cost_container) {
-            // updates parent if Option<CheapPair> is returned from update_cost
-            update_parent(better_pair, parent_container);
+impl CheapestRoute {
+    fn new() -> CheapestRoute {
+        Self {
+            cost: HashMap::new(), // does this need to be a HashMap?
+            route: HashMap::new(),
+            processing_node: String::new(),
         }
     }
-    // repeat the above flow until there is no more node to process
-    // repeats on processing node
-    
 
-    let result = format(cost_container, parent_container);
+    // registers the cost if the path through the passed node is the cheapest
+    pub fn register_cost(&mut self, node: &HashMap<&str, u32>) {
+        for (&out_neighbor, &cost) in node {
+            let out_neighbor = out_neighbor.to_string();
 
-    // return result
-    result
+            // get the cost of current processing node
+            let mut cost_of_current_node = 0_u32;
+            if let Some(cost) = self.cost.get(&self.processing_node) {
+                cost_of_current_node = *cost;
+            }
+
+            self.cost
+                .entry(out_neighbor)
+                .and_modify(|cost_in_table| {
+                    if *cost_in_table > cost_of_current_node + cost {
+                        *cost_in_table = cost_of_current_node + cost;
+                    }
+                })
+                .or_insert_with(|| cost_of_current_node + cost);
+            self.track_route();
+        }
+        // check entries of the table
+        // yes => compare if the cost to exisiting out neigbor is cheaper from the current
+        // node, or the node prior to current node
+
+        // 1. add the cost of existing entry and the cost of current
+        //    processing node
+        // get cost our from the cost_table
+        // add the cost to current processing node
+        // (which cost is found in the existing table)
+
+        // 2. compare the result from step 1 and the existing entry
+
+        // 3. step 2::equal => do nothing,
+        //    step 2::result is greater => do nothing,
+        //    step 2::result is smaller => replace the value with the result
+
+        // repeat as many out neighbors
+    }
+
+    // tracks the route of the cheapest cost
+    fn track_route(&mut self) {
+        println!("I am the track router!");
+        let cost_keys = self.cost.keys();
+        for key in cost_keys {
+            let parent = self.processing_node.clone();
+            self.route
+                .entry(key.clone())
+                .and_modify(|current_parent| {
+                    if *key != parent {
+                        println!("inside and_modify: {current_parent}, {parent}");
+                        *current_parent = parent.clone();
+                    }
+                })
+                .or_insert(parent);
+        }
+        println!("{0:?}", self.route);
+    }
+
+    // returns the result after evaluation (indicator to whether evaluation of
+    // the subject graph is complete, should be implemented in the struct,
+    // but for simplicity and time's sake, I will refrain from it.
+    pub fn get_result() -> String {
+        todo!();
+    }
 }
 
-fn update_cost(
-    child_nodes: HashMap<&str, u32>,
-    cost_container: HashMap<String, u32>
-    ) -> Option<Vec<CheapPair>> {
-    // check the container if it needs an update 
-    // update when:
-    // 1. the container is empty
-    // 2. the container and the processing node's child is the same
-    //    AND the cost to the processing node + the cost to its child node is smaller
-    //    than the cost of the node in the container that's being compared
-
-    // if updated, store every key of the child nodes and the processing node (the parent)
-    // how the heck am I going to store the processing node...
-
+fn get_graph_keys(graph: &Graph) -> Vec<String> {
+    // get a list that lists the every key of the graph
+    graph.keys().map(|key| key.to_string()).collect()
+}
+// gets the key for next process
+// it is either the out-neighbor of the cheapest path of current processing node
+// or if it doen't have an out-neighbor anymore, not processed node.
+// (but the latter sirtuation will not be considered in this project)
+fn next_key(processing_node: &HashMap<&str, u32>) -> String {
+    let graph_keys = get_graph_keys(graph);
 }
 
-fn update_parent() {
-    // use Vec<CheapPair> to iterate over the pair in cost_container
-    // ...now, this is a bad logic!! Fix it next time.
-} 
+fn get_starting_key<'a>(graph: &Graph) -> (String, String) {
+    let nodes = get_starting_key(graph);
+
+    // get the child keys using the key from the keys attained from above
+    let mut out_neighbor_keys: Vec<String> = Vec::new();
+
+    // push every child keys into a single list
+    // delete the duplicates (or don't push if it already exists in the list)
+    let mut starting_key: Option<String> = None;
+    let mut finish_key: Option<String> = None;
+
+    (
+        starting_key.expect("error").to_string(),
+        finish_key.expect("error").to_string(),
+    )
+}
+
+fn run(graph: &Graph) {
+    let mut keys: Vec<String> = graph.keys().map(|key| key.to_string()).collect();
+    println!("0");
+    let (mut processing_key, finish_key) = get_starting_key(graph);
+    println!("1");
+
+    println!("processing_key: {processing_key}");
+
+    // let cheapest_route = CheapestRoute::new();
+    let test_cost_table =
+        HashMap::from([("start", 0_u32), ("a", 3_u32), ("b", 4_u32), ("finish", 7)]);
+    println!("2");
+
+    // operate until there's no more key to process
+    while !keys.is_empty() {
+        println!("in loop");
+        // get the node to process
+        // let processing_node = graph.get(processing_key).unwrap();
+        println!("processing_key: {processing_key}");
+
+        // try registering the costs
+        println!("before if: {keys:?}");
+
+        // pop the processing key from keys list
+        // 1. iterate over the keys and remove the element that matches processing_key
+        // 2. create another vec to store used keys and only process the keys not in the vec
+        // 3. modify the processed key and iterate over the elements without modification
+        for (index, key) in keys.clone().into_iter().enumerate() {
+            if key == processing_key {
+                keys.remove(index);
+                println!("in if: {keys:?}");
+            }
+        }
+
+        println!("{keys:?}");
+        println!("before next_key: {processing_key}");
+        processing_key = next_key(&test_cost_table, &keys);
+        println!("after next_key: {processing_key}");
+        // assign the next processing key
+
+        keys.pop();
+    }
+
+    println!("Loop ended!");
+
+    // assign the result in String type
+    // let result = cheapest_route.get_result();
+
+    // return a String data containing the information of the cheapest paths
+    // result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_table() {
+        let cheapest_route = CheapestRoute::new();
+        assert!(cheapest_route.cost.is_empty());
+    }
+
+    #[test]
+    fn get_start_key() {
+        let graph: Graph = HashMap::from([
+            ("start", HashMap::from([("a", 6), ("b", 2)])),
+            ("a", HashMap::from([("finish", 2)])),
+            ("b", HashMap::from([("a", 3), ("finish", 7)])),
+            ("finish", HashMap::new()),
+        ]);
+
+        let (starting_key, finish_key) = get_starting_key(&graph);
+        assert_eq!("start", starting_key);
+        assert_eq!("finish", finish_key);
+    }
+    /*
+    #[test]
+    fn register_cost() {
+        let test_input = HashMap::from([("a", 3_u32), ("b", 4_u32)]);
+        let mut cheapest_route = CheapestRoute::new();
+
+        cheapest_route.register_cost(&test_input);
+        let test_output = HashMap::from([
+            ("a".to_string(), 3_u32),
+            ("b".to_string(), 4_u32)
+        ]);
+
+        assert_eq!(test_output, cheapest_route.cost);
+    }
+    #[test]
+    fn register_cost_case_two() {
+        let test_input = HashMap::from([("a", 3_u32), ("b", 4_u32)]);
+        let mut cheapest_route = CheapestRoute {
+            cost: HashMap::from([("c".to_string(), 5_u32), ("d".to_string(), 6_u32)]),
+            parent: HashMap::new(),
+        };
+
+        cheapest_route.register_cost(&test_input);
+
+        let test_output = HashMap::from([
+            ("a".to_string(), 3_u32),
+            ("b".to_string(), 4_u32),
+            ("c".to_string(), 5_u32),
+            ("d".to_string(), 6_u32),
+        ]);
+        assert_eq!(test_output, cheapest_route.cost);
+    }
+    */
+    #[test]
+    fn register_cost_case_three() {
+        let test_input = HashMap::from([("a", 6_u32), ("b", 3_u32)]);
+        let mut cheapest_route = CheapestRoute {
+            cost: HashMap::new(),
+            route: HashMap::new(),
+            processing_node: String::from("start"),
+        };
+        /*
+        let mut cheapest_route = CheapestRoute {
+            cost: HashMap::from([("a".to_string(), 6_u32), ("b".to_string(), 3_u32)]),
+            route: HashMap::new(),
+            processing_node: String::from("b"),
+        };
+        */
+        cheapest_route.register_cost(&test_input);
+
+        let test_input = HashMap::from([("a", 2_u32), ("f", 6_u32)]);
+        cheapest_route.processing_node = String::from("b");
+        cheapest_route.register_cost(&test_input);
+
+        let test_output = HashMap::from([
+            ("a".to_string(), 5_u32),
+            ("b".to_string(), 3_u32),
+            ("f".to_string(), 9_u32),
+        ]);
+        assert_eq!(test_output, cheapest_route.cost);
+    }
+    /*
+    #[test]
+    fn demo_run() {
+        type Graph<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
+        let graph: Graph = HashMap::from([
+            ("start", HashMap::from([("a", 6), ("b", 2)])),
+            ("a", HashMap::from([("finish", 1)])),
+            ("b", HashMap::from([("a", 3), ("finish", 5)])),
+            ("finish", HashMap::new()),
+        ]);
+
+        run(&graph);
+    }
+    */
+    #[test]
+    fn next_key_demo() {
+        // function requirements:
+        // outputs a String, which value will variy depending on the state of the program
+        // state 1, (initial)
+        // [nodes: zero processed, previous processed: process has not started]
+        // state 2,
+        // [nodes: few processed, previous processed: does have an out-neighbor]
+        // state 3,
+        // [nodes: few processed, previous processed: does not have an out-neighbor]
+        // state 4,
+        // [nodes: all processed, previous processed: does not have an out-neighbor]
+
+        // I need a container that will keep track of the keys proccessed
+        //
+
+        // case: state 1 -> find the starting key (this made me to think, maybe
+        // I can achieve both the starting key and finishing key, within this
+        // fuction)
+
+        // case: state 2 -> key will be the cheapest out-neighbor of the procced
+        // node
+
+        // case 3
+    }
+}
