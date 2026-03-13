@@ -18,8 +18,11 @@
 // 3. to sotre the cost of 2 <u32>
 use std::collections::{HashMap, HashSet};
 
+type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
+
 fn run(network: &Network, source: &str, destination: &str) -> String {
     // get all the nodes in the Network
+    let all_nodes = network.keys().map(|node| *node).collect::<Vec<&str>>();
 
     // *** Processor tasks
     // check the neighbors of source node
@@ -32,6 +35,7 @@ fn run(network: &Network, source: &str, destination: &str) -> String {
     // repeat untill every node is processed
 
     // format the output
+    todo!()
 }
 
 // compare with the list of input nodes and return true if it has
@@ -40,21 +44,6 @@ fn has_visited_all_nodes(network_nodes: &[&str], processed_nodes: &[&str]) -> bo
     let processed = processed_nodes.iter().collect::<HashSet<_>>();
 
     network == processed
-    /*
-    let mut result = false;
-    // don't even compare when len() does not equal
-    if network_nodes.len() == processed_nodes.len() {
-        // check if two list have identical content
-        for node in processed_nodes {
-            if !network_nodes.contains(node) {
-                println!("something went wrong");
-                return false;
-            }
-        }
-        result = true;
-    }
-    result
-    */
 }
 
 #[cfg(test)]
@@ -64,10 +53,23 @@ mod tests {
     #[test]
     fn visited_all_nodes() {
         // case 1: first loop (only the source)
+        let network_nodes = ["one", "two", "three"];
+        let processed_nodes = [];
+
+        let checker = has_visited_all_nodes(&network_nodes, &processed_nodes);
+
+        assert!(!checker);
         // case 2: in middle of the loop (source and others)
+        let network_nodes = ["one", "two", "three", "four"];
+        let processed_nodes = ["two", "one"];
+
+        let checker = has_visited_all_nodes(&network_nodes, &processed_nodes);
+
+        assert!(!checker);
+
         // case 3: processed all nodes (returns true)
-        let network_nodes = ["one", "two", "threea"];
-        let processed_nodes = ["two", "one", "threea"];
+        let network_nodes = ["one", "two", "three", "four"];
+        let processed_nodes = ["two", "one", "four", "three"];
 
         let checker = has_visited_all_nodes(&network_nodes, &processed_nodes);
 
