@@ -1,8 +1,10 @@
 /// below are *Translation* of Dijkstra Algorithm's
 /// pseudo code in Grokking Algorithm
-use std::{collections::HashMap, fmt::DebugTuple};
+use std::collections::HashMap;
 
-type Network = HashMap<&str, HashMap<&str, u32>>;
+use dijkstra::run;
+
+type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
 fn main() {
     let source = "start";
@@ -16,6 +18,6 @@ fn main() {
         (destination, HashMap::new()),
     ]);
 
-    let reuslt = run(&network, source, destination);
+    let reuslt = run(&network /*, source, destination*/);
     println!("{reuslt}");
 }

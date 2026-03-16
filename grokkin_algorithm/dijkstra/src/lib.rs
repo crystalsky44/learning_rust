@@ -20,19 +20,52 @@ use std::collections::{HashMap, HashSet};
 
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
-fn run(network: &Network, source: &str, destination: &str) -> String {
+struct CheapestFinder<'_> {
+    cheapest_cost_tracker: HashMap<&'_ str, u32>,
+    cheapest_route_tracker: HashMap<&'_ str, &'_ str>,
+    process_next: Option<&'_ str>,
+}
+
+impl CheapestFinder<'_> {
+    fn new() -> Self {
+        CheapestFinder { 
+            cheapest_cost_tracker: HashMap<&'_ str, u32>,
+            cheapest_route_tracker: HashMap<&'_ str, &' str>,
+            process_next: Option<&'_ str> ,
+        }
+    }
+
+    fn find_cheapest_neighbor() {}
+
+    fn store_to_tracker() {}
+
+    fn next_node() {}
+}
+
+// the run function can maybe said as a program's process archietecture
+pub fn run(network: &Network /*, source: &str, destination: &str*/) -> String {
     // get all the nodes in the Network
-    let all_nodes = network.keys().map(|node| *node).collect::<Vec<&str>>();
+    let all_nodes_in_network = network.keys().map(|node| *node).collect::<Vec<&str>>();
+    let processed_nodes: Vec<&str> = Vec::new();
+    println!("in fn_run");
 
     // *** Processor tasks
+    // get a node to process
+    // -> node = network.get("start").unwrap()
+    //
     // check the neighbors of source node
+    // -> CheapestFinder.find_cheapest_neighbor(node);
+    //
+    // ==cheapest of the node is found here==
     //
     // store their information
     // *** Processor tasks
     //
     // move to the cheapest out of all neighbors
+    // -> node = CheapestFinder.next_node();
     //
     // repeat untill every node is processed
+    // -> while has_visited_all_nodes() {}
 
     // format the output
     todo!()
@@ -44,6 +77,10 @@ fn has_visited_all_nodes(network_nodes: &[&str], processed_nodes: &[&str]) -> bo
     let processed = processed_nodes.iter().collect::<HashSet<_>>();
 
     network == processed
+}
+
+fn format_output() -> String {
+    todo!()
 }
 
 #[cfg(test)]
@@ -74,5 +111,18 @@ mod tests {
         let checker = has_visited_all_nodes(&network_nodes, &processed_nodes);
 
         assert!(checker);
+    }
+    #[test]
+    fn new_finder() {
+        let cheapest_finder = CheapestFinder::new();
+
+        let cost = cheapest_finder.cheapest_cost_tracker.get("start").unwrap();
+        assert_eq!(cost, None);
+
+        let route = cheapest_finder.cheapest_route_tracker.get("start").unwrap();
+        assert_eq!(cost, None);
+
+        let next_node = cheapest_finder.process_next;
+        assert_eq!(next_node, None);
     }
 }
