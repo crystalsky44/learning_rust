@@ -20,22 +20,26 @@ use std::collections::{HashMap, HashSet};
 
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
-struct CheapestFinder<'_> {
-    cheapest_cost_tracker: HashMap<&'_ str, u32>,
-    cheapest_route_tracker: HashMap<&'_ str, &'_ str>,
-    process_next: Option<&'_ str>,
+struct CheapestFinder<'a> {
+    from_to: (&'a str, &'a str),
+    cheapest_cost_tracker: HashMap<&'a str, u32>,
+    cheapest_route_tracker: HashMap<&'a str, &'a str>,
+    process_next: Option<&'a str>,
 }
 
-impl CheapestFinder<'_> {
-    fn new() -> Self {
-        CheapestFinder { 
-            cheapest_cost_tracker: HashMap<&'_ str, u32>,
-            cheapest_route_tracker: HashMap<&'_ str, &' str>,
-            process_next: Option<&'_ str> ,
+impl<'a> CheapestFinder<'a> {
+    fn new(source: &'a str, destination: &'a str) -> Self {
+        CheapestFinder {
+            from_to: (source, destination),
+            cheapest_cost_tracker: HashMap::new(),
+            cheapest_route_tracker: HashMap::new(),
+            process_next: None,
         }
     }
 
-    fn find_cheapest_neighbor() {}
+    fn find_cheapest_neighbor(node: &HashMap<&'a str, u32>) -> Option<&'a str> {
+        node.iter().min_by_key
+    }
 
     fn store_to_tracker() {}
 
@@ -45,12 +49,12 @@ impl CheapestFinder<'_> {
 // the run function can maybe said as a program's process archietecture
 pub fn run(network: &Network /*, source: &str, destination: &str*/) -> String {
     // get all the nodes in the Network
-    let all_nodes_in_network = network.keys().map(|node| *node).collect::<Vec<&str>>();
+    let all_nodes_in_network = network.keys().copied().collect::<Vec<&str>>();
     let processed_nodes: Vec<&str> = Vec::new();
     println!("in fn_run");
 
     // *** Processor tasks
-    // get a node to process
+    // get the starting node to ignite the process
     // -> node = network.get("start").unwrap()
     //
     // check the neighbors of source node
@@ -70,6 +74,12 @@ pub fn run(network: &Network /*, source: &str, destination: &str*/) -> String {
     // format the output
     todo!()
 }
+
+/*
+fn get_node<'a>(network: &'a Network, node: &str) -> Option<&'a HashMap<&'a str, u32>> {
+    network.get(node)
+}
+*/
 
 // compare with the list of input nodes and return true if it has
 fn has_visited_all_nodes(network_nodes: &[&str], processed_nodes: &[&str]) -> bool {
@@ -114,13 +124,17 @@ mod tests {
     }
     #[test]
     fn new_finder() {
-        let cheapest_finder = CheapestFinder::new();
+        let cheapest_finder = CheapestFinder::new("start", "finish");
 
-        let cost = cheapest_finder.cheapest_cost_tracker.get("start").unwrap();
+        let (from, to) = cheapest_finder.from_to;
+        assert_eq!(from, "start");
+        assert_eq!(to, "finish");
+
+        let cost = cheapest_finder.cheapest_cost_tracker.get("start");
         assert_eq!(cost, None);
 
-        let route = cheapest_finder.cheapest_route_tracker.get("start").unwrap();
-        assert_eq!(cost, None);
+        let route = cheapest_finder.cheapest_route_tracker.get("start");
+        assert_eq!(route, None);
 
         let next_node = cheapest_finder.process_next;
         assert_eq!(next_node, None);
