@@ -20,7 +20,7 @@ use std::collections::{HashMap, HashSet};
 
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
-struct CheapestFinder<'a> {
+pub struct CheapestFinder<'a> {
     from_to: (&'a str, &'a str),
     cheapest_cost_tracker: HashMap<&'a str, u32>,
     cheapest_route_tracker: HashMap<&'a str, &'a str>,
@@ -28,7 +28,7 @@ struct CheapestFinder<'a> {
 }
 
 impl<'a> CheapestFinder<'a> {
-    fn new(source: &'a str, destination: &'a str) -> Self {
+    pub fn new(source: &'a str, destination: &'a str) -> Self {
         CheapestFinder {
             from_to: (source, destination),
             cheapest_cost_tracker: HashMap::new(),
@@ -37,13 +37,39 @@ impl<'a> CheapestFinder<'a> {
         }
     }
 
-    fn find_cheapest_neighbor(node: &HashMap<&'a str, u32>) -> Option<&'a str> {
-        node.iter().min_by_key
+    pub fn has_visited(&self, node: &str) -> Option<&str> {
+        // self.cheapest_cost_tracker.iter().any(|(&x, _)| x == node)
+        self.cheapest_cost_tracker
+            .iter()
+            .find(|(&tracker_node, _)| tracker_node == node)
+            .map(|(&x, _)| x)
     }
 
-    fn store_to_tracker() {}
+    pub fn get_optimal_cost(&self, node: &HashMap<&'a str, u32>) -> Option<u32> {
+        // the finder should already know the node to evaluate
+        // 1 need: the cost of node under evaluation in cost_tracker
+        // 2 need: the new cost from processing node
+        // 3 need: the cost to processing node from the source
+        //
+        // compare:
+        // (cost to processing node from source + cost to the evaluating node
+        // from processing node) < the cost in cost tracker
+        //
+        // returns the cost if the new cost makes the cost cheaper
+        // returns None if not
 
-    fn next_node() {}
+        todo!()
+    }
+
+    fn write_cost_tracker(&mut self, node: &HashMap<&'a str, u32>) {
+        todo!()
+    }
+
+    fn write_route_tracker(&mut self) {}
+
+    fn get_cheapest_neighbor(node: &HashMap<&'a str, u32>) -> Option<&'a str> {
+        todo!()
+    }
 }
 
 // the run function can maybe said as a program's process archietecture
@@ -53,20 +79,29 @@ pub fn run(network: &Network /*, source: &str, destination: &str*/) -> String {
     let processed_nodes: Vec<&str> = Vec::new();
     println!("in fn_run");
 
+    // initiate
+    // sets CheapestFinder.cheapest_cost_tracker,
+    // CheapestFinder.cheapest_route_tracker,
+    // returns the processing node
+
     // *** Processor tasks
-    // get the starting node to ignite the process
-    // -> node = network.get("start").unwrap()
+    // get the next processing node from 'network'
+    // -> current_node = network.get(node).unwrap()
     //
-    // check the neighbors of source node
-    // -> CheapestFinder.find_cheapest_neighbor(node);
+    // check the neighbors of current node
+    // -> CheapestFinder
+    // .has_visited() (within iterator of current_node)
+    // .is_optimal() the heart of this program (if has_visited returns
+    // false, then this function does not need to be called)
+    // .write_cost_tracker()
+    //
+    // .write_route_tacker()
     //
     // ==cheapest of the node is found here==
-    //
-    // store their information
     // *** Processor tasks
     //
     // move to the cheapest out of all neighbors
-    // -> node = CheapestFinder.next_node();
+    // -> node = CheapestFinder.get_cheapest_neighbor();
     //
     // repeat untill every node is processed
     // -> while has_visited_all_nodes() {}
@@ -75,11 +110,7 @@ pub fn run(network: &Network /*, source: &str, destination: &str*/) -> String {
     todo!()
 }
 
-/*
-fn get_node<'a>(network: &'a Network, node: &str) -> Option<&'a HashMap<&'a str, u32>> {
-    network.get(node)
-}
-*/
+fn initiate() {}
 
 // compare with the list of input nodes and return true if it has
 fn has_visited_all_nodes(network_nodes: &[&str], processed_nodes: &[&str]) -> bool {
@@ -138,5 +169,27 @@ mod tests {
 
         let next_node = cheapest_finder.process_next;
         assert_eq!(next_node, None);
+    }
+    #[test]
+    fn returns_true_on_exisiting_node() {
+        let cheapest_route_finder = make_finder();
+
+        assert!(cheapest_route_finder.has_visited("a"));
+    }
+    #[test]
+    fn returns_false_on_node_unvisited() {
+        let cheapest_route_finder = make_finder();
+
+        assert!(!cheapest_route_finder.has_visited("finish"));
+    }
+
+    // helper functions
+    fn make_finder() -> CheapestFinder<'static> {
+        CheapestFinder {
+            from_to: ("start", "finish"),
+            cheapest_cost_tracker: HashMap::from([("a", 3), ("b", 6)]),
+            cheapest_route_tracker: HashMap::new(),
+            process_next: None,
+        }
     }
 }
