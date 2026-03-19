@@ -41,7 +41,7 @@ impl<'a> CheapestFinder<'a> {
         // self.cheapest_cost_tracker.iter().any(|(&x, _)| x == node)
         self.cheapest_cost_tracker
             .iter()
-            .find(|(&tracker_node, _)| tracker_node == node)
+            .find(|&(&tracker_node, _)| tracker_node == node)
             .map(|(&x, _)| x)
     }
 
