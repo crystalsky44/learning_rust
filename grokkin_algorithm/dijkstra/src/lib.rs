@@ -22,6 +22,7 @@ type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
 pub struct CheapestFinder<'a> {
     from_to: (&'a str, &'a str),
+    processing_node: HashMap<&'a str, u32>,
     cheapest_cost_tracker: HashMap<&'a str, u32>,
     cheapest_route_tracker: HashMap<&'a str, &'a str>,
     process_next: Option<&'a str>,
@@ -31,13 +32,14 @@ impl<'a> CheapestFinder<'a> {
     pub fn new(source: &'a str, destination: &'a str) -> Self {
         CheapestFinder {
             from_to: (source, destination),
-            cheapest_cost_tracker: HashMap::new(),
+            processing_node: HashMap::new(),
+            cheapest_cost_tracker: HashMap::new(), // I might want this to be CostTracker, so that I can add impl
             cheapest_route_tracker: HashMap::new(),
             process_next: None,
         }
     }
 
-    pub fn has_visited(&self, node: &str) -> Option<&str> {
+    fn has_visited(&self, node: &str) -> Option<&str> {
         // self.cheapest_cost_tracker.iter().any(|(&x, _)| x == node)
         self.cheapest_cost_tracker
             .iter()
@@ -45,26 +47,39 @@ impl<'a> CheapestFinder<'a> {
             .map(|(&x, _)| x)
     }
 
-    pub fn get_optimal_cost(&self, node: &HashMap<&'a str, u32>) -> Option<u32> {
-        // the finder should already know the node to evaluate
-        // 1 need: the cost of node under evaluation in cost_tracker
-        // 2 need: the new cost from processing node
-        // 3 need: the cost to processing node from the source
-        //
-        // compare:
-        // (cost to processing node from source + cost to the evaluating node
-        // from processing node) < the cost in cost tracker
-        //
-        // returns the cost if the new cost makes the cost cheaper
-        // returns None if not
+    // the finder should already know the node to evaluate
+    // 1 need: the cost of node under evaluation in cost_tracker
+    // 2 need: the new cost from processing node
+    // 3 need: the cost to processing node from the source
+    //
+    // compare:
+    // (cost to processing node from source + cost to the evaluating node
+    // from processing node) < the cost in cost tracker
+    //
+    // returns the cost if the new cost makes the cost cheaper
+    // returns None if not
 
+    // calculate the cost to visited node with new cost from the source,
+    fn add_current_node_and_new_cost(&self, node_to_evaluate: &str) -> u32 {
         todo!()
     }
 
-    fn write_cost_tracker(&mut self, node: &HashMap<&'a str, u32>) {
+    // determines whether the current written cost is cheaper then the new cost to the visited node and returns the cost if cheaper
+    fn new_cost_is_cheaper(&self, new_cost: u32) -> Option<u32> {
         todo!()
     }
 
+    /* I don't know if I need this now
+    fn get_optimal_cost(&self, node: &HashMap<&'a str, u32>) -> Option<u32> {
+    todo!()
+    }
+    */
+
+    fn write_cost_tracker(&mut self, node_to_write: &str, cost_to_write: u32) {
+        todo!()
+    }
+
+    // I might need to ask few questions about this
     fn write_route_tracker(&mut self) {}
 
     fn get_cheapest_neighbor(node: &HashMap<&'a str, u32>) -> Option<&'a str> {
@@ -171,16 +186,16 @@ mod tests {
         assert_eq!(next_node, None);
     }
     #[test]
-    fn returns_true_on_exisiting_node() {
+    fn returns_node_name_on_visited_nodes() {
         let cheapest_route_finder = make_finder();
 
-        assert!(cheapest_route_finder.has_visited("a"));
+        assert_eq!(cheapest_route_finder.has_visited("a"), Some("a"));
     }
     #[test]
-    fn returns_false_on_node_unvisited() {
+    fn returns_none_on_unvisited_node() {
         let cheapest_route_finder = make_finder();
 
-        assert!(!cheapest_route_finder.has_visited("finish"));
+        assert_eq!(cheapest_route_finder.has_visited("finish"), None);
     }
 
     // helper functions
