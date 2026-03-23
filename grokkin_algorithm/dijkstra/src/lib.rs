@@ -20,39 +20,65 @@ use std::collections::{HashMap, HashSet};
 
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
+pub struct RouteRequest<'a, 'b> {
+    source: &'b str,
+    destination: &'b str,
+    target_network: &'a Network<'a>,
+}
+
+impl<'a> RouteRequest<'a> {
+    pub fn new(target_network: &'a Network, source: &'a str, destination: &'a str) -> Self {
+        RouteRequest {
+            target_network,
+            source,
+            destination,
+        }
+    }
+}
+
 pub struct CheapestFinder<'a> {
+    target_network: &'a Network<'a>,
     from_to: (&'a str, &'a str),
     // processing_node: HashMap<&'a str, u32>,
-    // processing_node_name: &'a str,
-    cheapest_cost_tracker: HashMap<&'a str, Option<u32>>,
-    cheapest_route_tracker: HashMap<&'a str, Option<&'a str>>,
+    cost_tracker: HashMap<&'a str, Option<u32>>,
+    route_tracker: HashMap<&'a str, Option<&'a str>>,
     process_next: Option<&'a str>,
 }
 
 impl<'a> CheapestFinder<'a> {
-    pub fn new(source: &'a str, destination: &'a str) -> Self {
+    pub fn new(find_route: RouteRequest<'a>) -> Self {
         CheapestFinder {
-            from_to: (source, destination),
+            target_network: find_route.target_network,
+            from_to: (find_route.source, find_route.destination),
             // processing_node: HashMap::new(),
-            // processing_node_name: ,
-            cheapest_cost_tracker: HashMap::new(), // I might want this to be CostTracker, so that I can add impl
-            cheapest_route_tracker: HashMap::new(),
+            cost_tracker: HashMap::new(), // I might want this to be CostTracker, so that I can add impl
+            route_tracker: HashMap::new(),
             process_next: None,
         }
     }
 
-    fn initiate(&mut self, source_neighbors: &HashMap<&'a str, u32>) {
+    fn initiate_trackers(&mut self, source_neighbors: &HashMap<&'a str, u32>) {
+        let (source_node_name, _) = self.from_to;
         for (node_name, &cost) in source_neighbors {
-            self.cheapest_cost_tracker.insert(node_name, Some(cost));
+            self.cost_tracker.insert(node_name, Some(cost));
+            self.route_tracker.insert(node_name, Some(source_node_name));
         }
     }
-    fn set_processing_node(&mut self, network: &Network) {
+
+    fn set_next_processing_node(&mut self, network: &Network) {
+        // checks current node's neighbors
+        // sets 'next_processing_node' to cheapest out of the nieghbors
+
+        // checks for unprocessed nodes in the Network
+        // sets 'next_processing_node' to any first unprocessed node found
+
+        // return 'None' when node can't be found after above two process
         todo!()
     }
 
     fn has_visited(&self, node: &str) -> Option<&str> {
-        // self.cheapest_cost_tracker.iter().any(|(&x, _)| x == node)
-        self.cheapest_cost_tracker
+        // self.cost_tracker.iter().any(|(&x, _)| x == node)
+        self.cost_tracker
             .iter()
             .find(|&(&tracker_node, _)| tracker_node == node)
             .map(|(&x, _)| x)
@@ -74,7 +100,7 @@ impl<'a> CheapestFinder<'a> {
     fn add_current_node_and_new_cost(&self, node_to_evaluate: &str) -> u32 {
         // how do I get the current node's cost?
         // cost should be stored in the cost_tracker since it's a neighbor of processed node
-        // self.cheapest_cost_tracker.get(node).unwrap() +
+        // self.cost_tracker.get(node).unwrap() +
         // ...where do I get the 'node' passed to .get()?
         //
         // self.processing_node.get("node_to_evaluate").unwrap()
@@ -113,19 +139,19 @@ pub fn run(network: &Network, source: &str, destination: &str) -> String {
     println!("in fn_run");
 
     // initiate
-    // sets CheapestFinder.cheapest_cost_tracker,
+    // sets CheapestFinder.cost_tracker,
     let mut finder = CheapestFinder::new(source, destination);
-    let (source, _destination) = finder.from_to;
-    let first_node = network
+    let source_neigbor = network
         .get(source)
-        .expect("something wrong with the network");
+        .expect("something wrong with network data");
 
-    // I need an access function here finder.initiate(frist_node)
+    // I need an set up function here finder.initiate_trackers(frist_node)
+    finder.initiate_trackers(source_neigbor);
 
-    // CheapestFinder.cheapest_route_tracker,
+    // CheapestFinder.route_tracker,
     // returns the processing node
 
-    // *** Processor tasks
+    // *** Finder traversing
     // load the node to process
     // let mut processing_node_name: &'a str = finder.process_next.expect();
     //
@@ -142,7 +168,7 @@ pub fn run(network: &Network, source: &str, destination: &str) -> String {
     // .write_route_tacker()
     //
     // ==cheapest of the node is found here==
-    // *** Processor tasks
+    // *** Finder traversing
     //
     // move to the cheapest out of all neighbors
     // -> node = CheapestFinder.get_cheapest_neighbor();
@@ -199,16 +225,16 @@ mod tests {
     }
     #[test]
     fn new_finder() {
-        let cheapest_finder = CheapestFinder::new("start", "finish");
+        let cheapest_finder = CheapestFinder::new();
 
         let (from, to) = cheapest_finder.from_to;
         assert_eq!(from, "start");
         assert_eq!(to, "finish");
 
-        let cost = cheapest_finder.cheapest_cost_tracker.get("start");
+        let cost = cheapest_finder.cost_tracker.get("start");
         assert_eq!(cost, None);
 
-        let route = cheapest_finder.cheapest_route_tracker.get("start");
+        let route = cheapest_finder.route_tracker.get("start");
         assert_eq!(route, None);
 
         let next_node = cheapest_finder.process_next;
@@ -227,12 +253,17 @@ mod tests {
         assert_eq!(cheapest_route_finder.has_visited("finish"), None);
     }
     #[test]
-    fn initiate_cost_tracker() {
+    fn insert_key_value_pairs_to_cost_and_route_trackers() {
         let mut finder = CheapestFinder::new("start", "end");
         let test_map = HashMap::from([("a", 6), ("b", 2)]);
 
-        finder.initiate(&test_map);
-        assert_eq!(finder.cheapest_cost_tracker.len(), test_map.len())
+        let test_cost_map = HashMap::from([("a", Some(6)), ("b", Some(2))]);
+        let test_route_map = HashMap::from([("a", Some("start")), ("b", Some("start"))]);
+
+        finder.initiate_trackers(&test_map);
+
+        assert_eq!(finder.cost_tracker, test_cost_map);
+        assert_eq!(finder.route_tracker, test_route_map);
     }
 
     // helper functions
@@ -252,8 +283,8 @@ mod tests {
     fn make_finder() -> CheapestFinder<'static> {
         CheapestFinder {
             from_to: ("start", "finish"),
-            cheapest_cost_tracker: HashMap::from([("a", Some(3)), ("b", Some(6))]),
-            cheapest_route_tracker: HashMap::new(),
+            cost_tracker: HashMap::from([("a", Some(3)), ("b", Some(6))]),
+            route_tracker: HashMap::new(),
             process_next: None,
         }
     }

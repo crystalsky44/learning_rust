@@ -2,7 +2,7 @@
 /// pseudo code in Grokking Algorithm
 use std::collections::HashMap;
 
-use dijkstra::run;
+use dijkstra::{RouteRequest, run};
 
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
@@ -12,12 +12,14 @@ fn main() {
 
     // create Network
     let network: Network = HashMap::from([
-        (source, HashMap::from([("a", 6), ("b", 2)])),
-        ("a", HashMap::from([(destination, 1)])),
-        ("b", HashMap::from([("a", 3), (destination, 5)])),
-        (destination, HashMap::new()),
+        ("start", HashMap::from([("a", 6), ("b", 2)])),
+        ("a", HashMap::from([("finish", 1)])),
+        ("b", HashMap::from([("a", 3), ("finish", 5)])),
+        ("finish", HashMap::new()),
     ]);
 
-    let reuslt = run(&network /*, source, destination*/);
+    let find_route = RouteRequest::new(&network, source, destination);
+
+    let reuslt = run(find_route);
     println!("{reuslt}");
 }
