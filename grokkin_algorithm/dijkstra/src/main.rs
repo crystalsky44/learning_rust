@@ -7,19 +7,19 @@ use dijkstra::{RouteRequest, run};
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
 fn main() {
-    let source = "start";
-    let destination = "finish";
+    let source = "u";
+    let destination = "z";
 
     // create Network
     let network: Network = HashMap::from([
-        ("start", HashMap::from([("a", 6), ("b", 2)])),
-        ("a", HashMap::from([("finish", 1)])),
-        ("b", HashMap::from([("a", 3), ("finish", 5)])),
-        ("finish", HashMap::new()),
+        ("u", HashMap::from([("a", 6), ("b", 2)])),
+        ("a", HashMap::from([("z", 1)])),
+        ("b", HashMap::from([("a", 3), ("z", 5)])),
+        ("z", HashMap::new()),
     ]);
 
-    let find_route = RouteRequest::new(&network, source, destination);
+    let route_request = RouteRequest::new(network, source, destination);
 
-    let reuslt = run(find_route);
+    let reuslt = run(route_request);
     println!("{reuslt}");
 }

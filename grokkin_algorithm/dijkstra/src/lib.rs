@@ -23,11 +23,11 @@ type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 pub struct RouteRequest<'a, 'b> {
     source: &'b str,
     destination: &'b str,
-    target_network: &'a Network<'a>,
+    target_network: Network<'a>,
 }
 
-impl<'a> RouteRequest<'a> {
-    pub fn new(target_network: &'a Network, source: &'a str, destination: &'a str) -> Self {
+impl<'a, 'b> RouteRequest<'a, 'b> {
+    pub fn new(target_network: Network<'a>, source: &'b str, destination: &'b str) -> Self {
         RouteRequest {
             target_network,
             source,
@@ -36,20 +36,18 @@ impl<'a> RouteRequest<'a> {
     }
 }
 
-pub struct CheapestFinder<'a> {
-    target_network: &'a Network<'a>,
-    from_to: (&'a str, &'a str),
+pub struct CheapestFinder<'a, 'b> {
+    route_request: RouteRequest<'a, 'b>,
     // processing_node: HashMap<&'a str, u32>,
     cost_tracker: HashMap<&'a str, Option<u32>>,
     route_tracker: HashMap<&'a str, Option<&'a str>>,
     process_next: Option<&'a str>,
 }
 
-impl<'a> CheapestFinder<'a> {
-    pub fn new(find_route: RouteRequest<'a>) -> Self {
+impl<'a, 'b> CheapestFinder<'a, 'b> {
+    pub fn new(find_route: RouteRequest<'a, 'b>) -> Self {
         CheapestFinder {
-            target_network: find_route.target_network,
-            from_to: (find_route.source, find_route.destination),
+            route_request: find_route,
             // processing_node: HashMap::new(),
             cost_tracker: HashMap::new(), // I might want this to be CostTracker, so that I can add impl
             route_tracker: HashMap::new(),
@@ -57,8 +55,11 @@ impl<'a> CheapestFinder<'a> {
         }
     }
 
-    fn initiate_trackers(&mut self, source_neighbors: &HashMap<&'a str, u32>) {
-        let (source_node_name, _) = self.from_to;
+    fn initiate_trackers(&'b mut self, source_neighbors: &HashMap<&'a str, u32>)
+    where
+        'b: 'a,
+    {
+        let source_node_name = self.route_request.source;
         for (node_name, &cost) in source_neighbors {
             self.cost_tracker.insert(node_name, Some(cost));
             self.route_tracker.insert(node_name, Some(source_node_name));
@@ -254,7 +255,12 @@ mod tests {
     }
     #[test]
     fn insert_key_value_pairs_to_cost_and_route_trackers() {
-        let mut finder = CheapestFinder::new("start", "end");
+        let route_request = RouteRequest {
+            source: ("u"),
+            destination: ("z"),
+            target_network: (get_network()),
+        }
+        let mut finder = CheapestFinder::new(route_request);
         let test_map = HashMap::from([("a", 6), ("b", 2)]);
 
         let test_cost_map = HashMap::from([("a", Some(6)), ("b", Some(2))]);
@@ -269,10 +275,10 @@ mod tests {
     // helper functions
     fn get_network() -> Network<'static> {
         HashMap::from([
-            ("source", HashMap::from([("a", 6), ("b", 2)])),
-            ("a", HashMap::from([("destination", 1)])),
-            ("b", HashMap::from([("a", 3), ("destination", 5)])),
-            ("destination", HashMap::new()),
+            ("u", HashMap::from([("a", 6), ("b", 2)])),
+            ("a", HashMap::from([("z", 1)])),
+            ("b", HashMap::from([("a", 3), ("z", 5)])),
+            ("z", HashMap::new()),
         ])
     }
 
@@ -280,9 +286,13 @@ mod tests {
         ("source", "destination")
     }
 
-    fn make_finder() -> CheapestFinder<'static> {
+    fn make_finder() -> CheapestFinder<'static, 'static> {
         CheapestFinder {
-            from_to: ("start", "finish"),
+            route_request: RouteRequest {
+                source: ("u"),
+                destination: ("z"),
+                target_network: get_network()
+            },
             cost_tracker: HashMap::from([("a", Some(3)), ("b", Some(6))]),
             route_tracker: HashMap::new(),
             process_next: None,
