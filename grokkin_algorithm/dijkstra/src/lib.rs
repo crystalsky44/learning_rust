@@ -40,7 +40,9 @@ pub struct OptimalRouteFinder<'a, 'b> {
     route_request: RouteRequest<'a, 'b>,
     // processing_node: HashMap<&'a str, u32>,
     cost_tracker: HashMap<&'a str, Option<u32>>,
+    // does the value need to be Option<&str> Can't it not be just &str??
     route_tracker: HashMap<&'a str, Option<&'a str>>,
+    processed_nodes: Vec<&'a str>,
     current_node: Option<&'a str>,
     process_next: Option<&'a str>,
 }
@@ -52,23 +54,26 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
             // processing_node: HashMap::new(),
             cost_tracker: HashMap::new(),
             route_tracker: HashMap::new(),
+            processed_nodes: Vec::new(),
             current_node: None,
             process_next: None,
         }
     }
 
     fn initiate_finder(&mut self)
-        where
-            'b: 'a
+    where
+        'b: 'a,
     {
-        let source_neighbors = self.route_request
+        let source_neighbors = self
+            .route_request
             .target_network
             .get(self.route_request.source)
             .unwrap();
 
         for (node_name, &cost) in source_neighbors {
             self.cost_tracker.insert(node_name, Some(cost));
-            self.route_tracker.insert(node_name, Some(self.route_request.source));
+            self.route_tracker
+                .insert(node_name, Some(self.route_request.source));
         }
 
         self.current_node = Some(self.route_request.source);
@@ -77,11 +82,21 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
     fn set_next_processing_node(&mut self) {
         // checks current node's neighbors
         // sets 'next_processing_node' to cheapest out of the nieghbors
+        let current_processing_node = self.current_node;
+        let current_node_neighbors = self
+            .route_request
+            .target_network
+            .get(current_processing_node.expect("check network"))
+            .unwrap();
+        // TODO
+        let cheaper_node = current_processing_node.min_by();
 
         // checks for unprocessed nodes in the Network
         // sets 'next_processing_node' to any first unprocessed node found
 
         // return 'None' when node can't be found after above two process
+        // sets cuurent_node to none when RouteRequest.target_network's keys ==
+        // finder.processed_node's content
         todo!()
     }
 
@@ -259,14 +274,10 @@ mod tests {
         let next_node = cheapest_finder.process_next;
         assert_eq!(next_node, None);
     }
+
     #[test]
-    fn insert_key_value_pairs_to_cost_and_route_trackers() {
-        let route_request = RouteRequest {
-            source: ("u"),
-            destination: ("z"),
-            target_network: (get_network()),
-        };
-        let mut finder = OptimalRouteFinder::new(route_request);
+    fn sets_first_data_to_fields_current_node_and_cost_tracker_and_route_tracker() {
+        let mut finder = make_initiated_finder();
 
         let test_cost_map = HashMap::from([("a", Some(6)), ("b", Some(2))]);
         let test_route_map = HashMap::from([("a", Some("u")), ("b", Some("u"))]);
@@ -277,9 +288,27 @@ mod tests {
         assert_eq!(finder.route_tracker, test_route_map);
         assert_eq!(finder.current_node, Some("u"));
     }
+
     #[test]
     fn sets_current_node_to_cheaper_neighbor_of_current_node() {
+        let mut finder = make_initiated_finder();
+        finder.set_next_processing_node();
+
+        assert_eq!(finder.current_node, Some("b"));
     }
+    #[test]
+    fn sets_current_node_to_none_when_no_more_node_to_process() {
+        let mut finder = make_finder_that_visited_all_nodes();
+        finder.set_next_processing_node();
+
+        assert_eq!(finder.current_node, None);
+    }
+    /* commenting this test out. For my current network,
+     * this case cannot logically occur
+    #[test]
+    fn sets_current_node_to_non_visited_node_in_network() {}
+    */
+
     #[test]
     fn returns_node_name_on_visited_nodes() {
         let cheapest_route_finder = make_finder();
@@ -292,7 +321,6 @@ mod tests {
 
         assert_eq!(cheapest_route_finder.has_visited("finish"), None);
     }
-
     // helper functions
     fn get_network() -> Network<'static> {
         HashMap::from([
@@ -316,7 +344,6 @@ mod tests {
     }
 
     fn make_finder() -> OptimalRouteFinder<'static, 'static> {
-        let mut finder = Optimal
         OptimalRouteFinder {
             route_request: RouteRequest {
                 source: ("u"),
@@ -324,9 +351,42 @@ mod tests {
                 target_network: get_network(),
             },
             cost_tracker: HashMap::from([("a", Some(3)), ("b", Some(6))]),
-            route_tracker: HashMap::from([("a", "u"), ("")]),
+            route_tracker: HashMap::from([("a", Some("u")), ("b", Some("u"))]),
+            processed_nodes: Vec::new(),
             current_node: None,
             process_next: None,
+        }
+    }
+
+    fn make_initiated_finder() -> OptimalRouteFinder<'static, 'static> {
+        let route_request = RouteRequest {
+            source: ("u"),
+            destination: ("z"),
+            target_network: get_network(),
+        };
+        let mut finder = OptimalRouteFinder::new(route_request);
+        finder.initiate_finder();
+
+        finder
+    }
+
+    fn get_network_nodes() -> Vec<&'static str> {
+        let network = get_network();
+        network.keys().copied().collect::<Vec<&str>>()
+    }
+
+    fn make_finder_that_visited_all_nodes() -> OptimalRouteFinder<'static, 'static> {
+        OptimalRouteFinder {
+            route_request: RouteRequest {
+                source: "u",
+                destination: "z",
+                target_network: get_network(),
+            },
+            cost_tracker: HashMap::from([("a", Some(3)), ("b", Some(6))]),
+            route_tracker: HashMap::from([("a", Some("u")), ("b", Some("u"))]),
+            processed_nodes: get_network_nodes(),
+            current_node: Some("z"),
+            process_next: Some("b"),
         }
     }
 }
