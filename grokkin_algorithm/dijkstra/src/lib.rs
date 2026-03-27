@@ -82,14 +82,20 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
     fn set_next_processing_node(&mut self) {
         // checks current node's neighbors
         // sets 'next_processing_node' to cheapest out of the nieghbors
+        // returns `None` when it can't find a neighbor from the current node
         let current_processing_node = self.current_node;
         let current_node_neighbors = self
             .route_request
             .target_network
-            .get(current_processing_node.expect("check network"))
+            .get(current_processing_node.expect("check processing node"))
             .unwrap();
-        // TODO
-        let cheaper_node = current_processing_node.min_by();
+
+        let cheaper_node = current_node_neighbors
+            .iter()
+            .min_by(|&(_, acc_cost), &(_, e_cost)| acc_cost.cmp(e_cost))
+            .map(|(&node_name, _)| node_name);
+
+        self.current_node = cheaper_node;
 
         // checks for unprocessed nodes in the Network
         // sets 'next_processing_node' to any first unprocessed node found
@@ -97,7 +103,6 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
         // return 'None' when node can't be found after above two process
         // sets cuurent_node to none when RouteRequest.target_network's keys ==
         // finder.processed_node's content
-        todo!()
     }
 
     fn has_visited(&self, node: &str) -> Option<&str> {
