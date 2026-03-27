@@ -16,7 +16,10 @@
 // 1. to keep track if it went through all the nodes Vec<String>
 // 2. to store the information of cheapest route <HashMap<child, parent>>
 // 3. to sotre the cost of 2 <u32>
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::Hash,
+};
 
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
@@ -38,25 +41,25 @@ impl<'a, 'b> RouteRequest<'a, 'b> {
 
 pub struct OptimalRouteFinder<'a, 'b> {
     route_request: RouteRequest<'a, 'b>,
-    // processing_node: HashMap<&'a str, u32>,
     cost_tracker: HashMap<&'a str, Option<u32>>,
     // does the value need to be Option<&str> Can't it not be just &str??
     route_tracker: HashMap<&'a str, Option<&'a str>>,
+    current_node_name: Option<&'a str>,
+    current_node: HashMap<&'a str, u32>,
     processed_nodes: Vec<&'a str>,
-    current_node: Option<&'a str>,
-    process_next: Option<&'a str>,
+    // process_next: Option<&'a str>,
 }
 
 impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
     pub fn new(find_route: RouteRequest<'a, 'b>) -> Self {
         OptimalRouteFinder {
             route_request: find_route,
-            // processing_node: HashMap::new(),
             cost_tracker: HashMap::new(),
             route_tracker: HashMap::new(),
+            current_node_name: None,
+            current_node: HashMap::new(),
             processed_nodes: Vec::new(),
-            current_node: None,
-            process_next: None,
+            // process_next: None,
         }
     }
 
@@ -76,14 +79,14 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
                 .insert(node_name, Some(self.route_request.source));
         }
 
-        self.current_node = Some(self.route_request.source);
+        self.current_node_name = Some(self.route_request.source);
     }
 
     fn set_next_processing_node(&mut self) {
         // checks current node's neighbors
         // sets 'next_processing_node' to cheapest out of the nieghbors
         // returns `None` when it can't find a neighbor from the current node
-        let current_processing_node = self.current_node;
+        let current_processing_node = self.current_node_name;
         let current_node_neighbors = self
             .route_request
             .target_network
@@ -95,7 +98,8 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
             .min_by(|&(_, acc_cost), &(_, e_cost)| acc_cost.cmp(e_cost))
             .map(|(&node_name, _)| node_name);
 
-        self.current_node = cheaper_node;
+        self.current_node = current_node_neighbors.clone();
+        self.current_node_name = cheaper_node;
 
         // checks for unprocessed nodes in the Network
         // sets 'next_processing_node' to any first unprocessed node found
@@ -162,10 +166,6 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
 // the run function can maybe said as a program's process archietecture
 pub fn run(network: &Network, source: &str, destination: &str) -> String {
     // helper variables to check whether the program processed every node in the given network
-    let all_nodes_in_network = network.keys().copied().collect::<Vec<&str>>();
-    let processed_nodes: Vec<&str> = Vec::new();
-
-    println!("in fn_run");
 
     // initiate
     // sets OptimalRouteFinder.cost_tracker,
@@ -273,11 +273,8 @@ mod tests {
         let route = cheapest_finder.route_tracker.get("u");
         assert_eq!(route, None);
 
-        let test_current_node = cheapest_finder.current_node;
+        let test_current_node = cheapest_finder.current_node_name;
         assert_eq!(test_current_node, None);
-
-        let next_node = cheapest_finder.process_next;
-        assert_eq!(next_node, None);
     }
 
     #[test]
@@ -291,7 +288,7 @@ mod tests {
 
         assert_eq!(finder.cost_tracker, test_cost_map);
         assert_eq!(finder.route_tracker, test_route_map);
-        assert_eq!(finder.current_node, Some("u"));
+        assert_eq!(finder.current_node_name, Some("u"));
     }
 
     #[test]
@@ -299,14 +296,14 @@ mod tests {
         let mut finder = make_initiated_finder();
         finder.set_next_processing_node();
 
-        assert_eq!(finder.current_node, Some("b"));
+        assert_eq!(finder.current_node_name, Some("b"));
     }
     #[test]
     fn sets_current_node_to_none_when_no_more_node_to_process() {
         let mut finder = make_finder_that_visited_all_nodes();
         finder.set_next_processing_node();
 
-        assert_eq!(finder.current_node, None);
+        assert_eq!(finder.current_node_name, None);
     }
     /* commenting this test out. For my current network,
      * this case cannot logically occur
@@ -357,9 +354,9 @@ mod tests {
             },
             cost_tracker: HashMap::from([("a", Some(3)), ("b", Some(6))]),
             route_tracker: HashMap::from([("a", Some("u")), ("b", Some("u"))]),
+            current_node_name: None,
+            current_node: HashMap::new(),
             processed_nodes: Vec::new(),
-            current_node: None,
-            process_next: None,
         }
     }
 
@@ -389,9 +386,9 @@ mod tests {
             },
             cost_tracker: HashMap::from([("a", Some(3)), ("b", Some(6))]),
             route_tracker: HashMap::from([("a", Some("u")), ("b", Some("u"))]),
+            current_node_name: None,
+            current_node: HashMap::new(),
             processed_nodes: get_network_nodes(),
-            current_node: Some("z"),
-            process_next: Some("b"),
         }
     }
 }
