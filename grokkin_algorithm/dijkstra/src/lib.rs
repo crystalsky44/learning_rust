@@ -109,6 +109,30 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
         // finder.processed_node's content
     }
 
+    fn evaluate_path(&mut self, evaluating_node: &HashMap<&'a str, u32>) {
+        let Some(curret_node_name) = self.current_node_name else {
+            println!("");
+            return;
+        };
+
+        let cost_to_current_node = self
+            .cost_tracker
+            .get(self.current_node_name.expect("node_name"))
+            .unwrap()
+            .unwrap();
+
+        for (&node_name, &cost) in evaluating_node {
+            self.cost_tracker
+                .entry(node_name)
+                .and_modify(|tracker_cost| {
+                    if tracker_cost.expect("what") > cost_to_current_node + cost {
+                        *tracker_cost = Some(cost_to_current_node + cost);
+                    }
+                })
+                .or_insert(Some(cost_to_current_node + cost));
+        }
+    }
+
     fn has_visited(&self, node: &str) -> Option<&str> {
         // self.cost_tracker.iter().any(|(&x, _)| x == node)
         self.cost_tracker
@@ -311,6 +335,45 @@ mod tests {
     fn sets_current_node_to_non_visited_node_in_network() {}
     */
 
+    // tests for evaluate_path
+    #[test]
+    fn new_entry_to_trackers_when_processing_node_with_only_new_node_name() {
+        let test_nodes = HashMap::from([("d", 5_u32), ("f", 3_u32)]);
+
+        let mut finder = make_finder();
+
+        finder.evaluate_path(&test_nodes);
+
+        assert_eq!(finder.cost_tracker["d"], Some(7_u32));
+        assert_eq!(finder.cost_tracker["f"], Some(5_u32));
+    }
+    #[test]
+    fn modify_trackers_when_processing_node_with_visited_node() {
+        let test_nodes = HashMap::from([("a", 1_u32), ("f", 5_u32)]);
+
+        let mut finder = make_finder();
+        println!("{0:?}", finder.cost_tracker);
+
+        finder.evaluate_path(&test_nodes);
+        println!("{0:?}", finder.cost_tracker);
+
+        assert_eq!(finder.cost_tracker["a"], Some(3_u32));
+        assert_eq!(finder.cost_tracker["f"], Some(7_u32));
+    }
+    #[test]
+    fn does_not_modify_trackers_when_processing_node_with_visited_node() {
+        let test_nodes = HashMap::from([("a", 9_u32), ("f", 5_u32)]);
+
+        let mut finder = make_finder();
+        println!("{0:?}", finder.cost_tracker);
+
+        finder.evaluate_path(&test_nodes);
+        println!("{0:?}", finder.cost_tracker);
+
+        assert_eq!(finder.cost_tracker["a"], Some(5_u32));
+        assert_eq!(finder.cost_tracker["f"], Some(7_u32));
+    }
+
     #[test]
     fn returns_node_name_on_visited_nodes() {
         let cheapest_route_finder = make_finder();
@@ -323,6 +386,7 @@ mod tests {
 
         assert_eq!(cheapest_route_finder.has_visited("finish"), None);
     }
+
     // helper functions
     fn get_network() -> Network<'static> {
         HashMap::from([
@@ -352,9 +416,9 @@ mod tests {
                 destination: ("z"),
                 target_network: get_network(),
             },
-            cost_tracker: HashMap::from([("a", Some(3)), ("b", Some(6))]),
+            cost_tracker: HashMap::from([("a", Some(5)), ("b", Some(2))]),
             route_tracker: HashMap::from([("a", Some("u")), ("b", Some("u"))]),
-            current_node_name: None,
+            current_node_name: Some("b"),
             current_node: HashMap::new(),
             processed_nodes: Vec::new(),
         }
@@ -384,7 +448,7 @@ mod tests {
                 destination: "z",
                 target_network: get_network(),
             },
-            cost_tracker: HashMap::from([("a", Some(3)), ("b", Some(6))]),
+            cost_tracker: HashMap::from([("a", Some(3)), ("b", Some(2))]),
             route_tracker: HashMap::from([("a", Some("u")), ("b", Some("u"))]),
             current_node_name: None,
             current_node: HashMap::new(),
