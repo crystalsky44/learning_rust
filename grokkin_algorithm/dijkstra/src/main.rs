@@ -21,5 +21,4 @@ fn main() {
     let route_request = RouteRequest::new(network, source, destination);
 
     let reuslt = run(route_request);
-    println!("{reuslt}");
 }

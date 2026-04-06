@@ -1,28 +1,26 @@
+use dijkstra::RouteRequest;
 use std::collections::HashMap;
-use dijkstra::CheapestFinder;
+
+type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
 #[test]
-fn test_has_visited() {
-    let cheapest_router_finder = CheapestFinder {
-        from_to: ("start", "finish"),
-        cheapest_cost_tracker: HashMap::from([("a", 3), ("b", 6)]),
-        cheapest_route_tracker: HashMap::new(),
-        process_next: None,
-    };
+fn single_traversal_of_finder_returning_hashmap_with_all_nodes() {
+    let source = "u";
+    let destination = "z";
 
-    let test_node = HashMap::from([("a", 3), ("finsih", 6)]);
+    // create Network
+    let network: Network = HashMap::from([
+        ("u", HashMap::from([("a", 6), ("b", 2)])),
+        ("a", HashMap::from([("z", 1)])),
+        ("b", HashMap::from([("a", 3), ("z", 5)])),
+        ("z", HashMap::new()),
+    ]);
 
-    let mut true_case = false;
-    let mut false_case = true;
+    let route_request = RouteRequest::new(network, source, destination);
 
-    for (&node, _cost) in test_node.iter() {
-        if cheapest_router_finder.has_visited(node) {
-            true_case = true;
-        } else {
-            false_case = false;
-        }
-    }
-
-    assert!(true_case);
-    assert!(!false_case);
+    let result = dijkstra::run(route_request);
+    assert_eq!(
+        result,
+        HashMap::from([("a", Some(5_u32)), ("b", Some(2)), ("z", Some(7))])
+    );
 }

@@ -79,19 +79,21 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
     }
 
     fn next_node_name(&mut self) {
-        let cheaper_node = self.current_node
+        let cheaper_node = self
+            .current_node
             .iter()
             .min_by(|&(_, acc_cost), &(_, e_cost)| acc_cost.cmp(e_cost))
             .map(|(&node_name, _)| node_name);
         self.current_node_name = cheaper_node;
     }
 
-
     // sequentially coupled to fn next_processing_node_name
     fn set_new_current_node(&mut self) {
-        let Some(next_node) = 
-            self.route_request.target_network.get(self.current_node_name.unwrap()) else
-        {
+        let Some(next_node) = self
+            .route_request
+            .target_network
+            .get(self.current_node_name.unwrap())
+        else {
             return;
         };
 
@@ -159,7 +161,7 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
 }
 
 // the run function can maybe said as a program's process archietecture
-pub fn run(route_request: RouteRequest) {
+pub fn run<'a, 'b>(route_request: RouteRequest<'a, 'b>) -> HashMap<&'a str, Option<u32>> {
     // helper variables to check whether the program processed every node in the given network
 
     // initiate
@@ -196,7 +198,13 @@ pub fn run(route_request: RouteRequest) {
     // -> while has_visited_all_nodes() {}
 
     // format the output
-    todo!()
+
+    let mut finder = OptimalRouteFinder::new(route_request);
+
+    finder.set_next_processing_node();
+    finder.evaluate_path();
+
+    finder.cost_tracker
 }
 
 // compare with the list of input nodes and return true if it has
@@ -291,6 +299,7 @@ mod tests {
 
         assert_eq!(finder.cost_tracker["z"], Some(7_u32));
     }
+    // test below is already acting like a run
     #[test]
     fn modify_trackers_when_processing_node_with_visited_node() {
         let mut finder = make_initiated_finder();
