@@ -39,7 +39,7 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
         }
     }
 
-    fn initiate_finder(&mut self)
+    fn initiate(&mut self)
     where
         'b: 'a,
     {
@@ -139,7 +139,7 @@ where
     'b: 'a,
 {
     let mut finder = OptimalRouteFinder::new(route_request);
-    finder.initiate_finder();
+    finder.initiate();
 
     let mut all_nodes_visited = finder.has_visited_all_nodes();
     println!("before loop: {0:?}", finder.cost_tracker);
@@ -203,7 +203,7 @@ mod tests {
         let test_cost_map = HashMap::from([("a", Some(6)), ("b", Some(2))]);
         let test_route_map = HashMap::from([("a", Some("u")), ("b", Some("u"))]);
 
-        finder.initiate_finder();
+        finder.initiate();
 
         assert_eq!(finder.cost_tracker, test_cost_map);
         assert_eq!(finder.route_tracker, test_route_map);
@@ -305,7 +305,7 @@ mod tests {
             target_network: get_network(),
         };
         let mut finder = OptimalRouteFinder::new(route_request);
-        finder.initiate_finder();
+        finder.initiate();
 
         finder
     }
