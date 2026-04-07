@@ -1,3 +1,21 @@
+// Calculating the cheapest path in a network given the source node and
+// destination node
+//
+// input: network information, source node and destination node
+// output: 1 the cost of cheapest path, 2 the route of the cheapest path
+//
+// constraint: only use HashMap to store nodes and cost, use dijkstra algorithm
+//
+// dijkstra algorithm:
+// 1. look for neighbor nodes from the source node
+// 2. find the neighbor which is cheapest to go to
+// 3. do step 1 and 2 with the neighbor you went
+// 4. repeat until you finish examining from every node
+//
+// data:
+// 1. to keep track if it went through all the nodes Vec<String>
+// 2. to store the information of cheapest route <HashMap<child, parent>>
+// 3. to sotre the cost of 2 <u32>
 use std::collections::{HashMap, HashSet};
 
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
@@ -21,6 +39,7 @@ impl<'a, 'b> RouteRequest<'a, 'b> {
 pub struct OptimalRouteFinder<'a, 'b> {
     route_request: RouteRequest<'a, 'b>,
     cost_tracker: HashMap<&'a str, Option<u32>>,
+    // does the value need to be Option<&str> Can't it not be just &str??
     route_tracker: HashMap<&'a str, Option<&'a str>>,
     current_node_name: Option<&'a str>,
     current_node: HashMap<&'a str, u32>,
@@ -88,19 +107,30 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
     }
 
     fn set_next_processing_node(&mut self) {
+        // checks current node's neighbors
+        // sets 'next_processing_node' to cheapest out of the nieghbors
+        // returns `None` when it can't find a neighbor from the current node
         self.push_to_processed_nodes();
-
         self.next_node_name();
-        if self.current_node_name.is_some() {
+        if let Some(node_name) = self.current_node_name {
             self.set_new_current_node();
         }
+
+        //*** below are logics not implemented for this project
+        //*** but should be in production code
+
+        // checks for unprocessed nodes in the Network
+        // sets 'next_processing_node' to any first unprocessed node found
+
+        // return 'None' when node can't be found after above two process
+        // sets cuurent_node to none when RouteRequest.target_network's keys ==
+        // finder.processed_node's content
     }
 
     fn evaluate_path(&mut self) {
-        if self.current_node_name.is_none() {
+        if let None = self.current_node_name {
             return;
         }
-
         let evaluating_node = &self.current_node;
 
         let cost_to_current_node = self
@@ -122,15 +152,23 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
     }
 
     fn has_visited_all_nodes(&self) -> bool {
-        let network = self
-            .route_request
-            .target_network
-            .keys()
-            .collect::<HashSet<_>>();
+        let network = self.route_request.target_network.keys().collect::<HashSet<_>>();
         let processed = self.processed_nodes.iter().collect::<HashSet<_>>();
 
         network == processed
     }
+
+    // the finder should already know the node to evaluate
+    // 1 need: the cost of node under evaluation in cost_tracker
+    // 2 need: the new cost from processing node
+    // 3 need: the cost to processing node from the source
+    //
+    // compare:
+    // (cost to processing node from source + cost to the evaluating node
+    // from processing node) < the cost in cost tracker
+    //
+    // returns the cost if the new cost makes the cost cheaper
+    // returns None if not
 }
 
 // the run function can maybe said as a program's process archietecture
@@ -138,17 +176,51 @@ pub fn run<'a, 'b>(route_request: RouteRequest<'a, 'b>) -> HashMap<&'a str, Opti
 where
     'b: 'a,
 {
+    // helper variables to check whether the program processed every node in the given network
+
+    // initiate
+    // sets OptimalRouteFinder.cost_tracker,
+
+    // I need an set up function here finder.initiate_finder(frist_node)
+
+    // OptimalRouteFinder.route_tracker,
+    // returns the processing node
+
+    // *** Finder traversing
+    // load the node to process
+    // let mut processing_node_name: &'a str = finder.process_next.expect();
+    //
+    // get the next processing node from 'network'
+    // finder.set_processing_node(network);
+    //
+    // check the neighbors of current node
+    // -> OptimalRouteFinder
+    // .has_visited() (within iterator of current_node)
+    // .is_optimal() the heart of this program (if has_visited returns
+    // false, then this function does not need to be called)
+    // .write_cost_tracker()
+    //
+    // .write_route_tacker()
+    //
+    // ==cheapest of the node is found here==
+    // *** Finder traversing
+    //
+    // move to the cheapest out of all neighbors
+    // -> node = OptimalRouteFinder.get_cheapest_neighbor();
+    //
+    // repeat untill every node is processed
+    // -> while has_visited_all_nodes() {}
+
+    // format the output
+
     let mut finder = OptimalRouteFinder::new(route_request);
     finder.initiate_finder();
-
     let mut all_nodes_visited = finder.has_visited_all_nodes();
+
     println!("before loop: {0:?}", finder.cost_tracker);
 
     while !all_nodes_visited {
-        println!(
-            "current_node before setting next node: {:?}",
-            finder.current_node_name
-        );
+        println!("current_node before setting next node: {:?}", finder.current_node_name);
         finder.set_next_processing_node();
         finder.evaluate_path();
 
@@ -295,6 +367,21 @@ mod tests {
             source: ("u"),
             destination: ("z"),
             target_network: get_network(),
+        }
+    }
+
+    fn make_finder() -> OptimalRouteFinder<'static, 'static> {
+        OptimalRouteFinder {
+            route_request: RouteRequest {
+                source: ("u"),
+                destination: ("z"),
+                target_network: get_network(),
+            },
+            cost_tracker: HashMap::from([("a", Some(5)), ("b", Some(2))]),
+            route_tracker: HashMap::from([("a", Some("u")), ("b", Some("u"))]),
+            current_node_name: Some("b"),
+            current_node: HashMap::new(),
+            processed_nodes: Vec::new(),
         }
     }
 
