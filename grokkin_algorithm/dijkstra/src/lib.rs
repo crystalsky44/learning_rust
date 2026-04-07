@@ -16,7 +16,7 @@
 // 1. to keep track if it went through all the nodes Vec<String>
 // 2. to store the information of cheapest route <HashMap<child, parent>>
 // 3. to sotre the cost of 2 <u32>
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
@@ -78,6 +78,11 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
         self.current_node = source_neighbors.clone();
     }
 
+    fn push_to_processed_nodes(&mut self) {
+        let processed_node_name = self.current_node_name.expect("should_be_there");
+        self.processed_nodes.push(processed_node_name);
+    }
+
     fn next_node_name(&mut self) {
         let cheaper_node = self
             .current_node
@@ -94,6 +99,7 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
             .target_network
             .get(self.current_node_name.unwrap())
         else {
+            self.current_node = HashMap::new();
             return;
         };
 
@@ -104,8 +110,11 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
         // checks current node's neighbors
         // sets 'next_processing_node' to cheapest out of the nieghbors
         // returns `None` when it can't find a neighbor from the current node
+        self.push_to_processed_nodes();
         self.next_node_name();
-        self.set_new_current_node();
+        if let Some(node_name) = self.current_node_name {
+            self.set_new_current_node();
+        }
 
         //*** below are logics not implemented for this project
         //*** but should be in production code
@@ -119,6 +128,9 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
     }
 
     fn evaluate_path(&mut self) {
+        if let None = self.current_node_name {
+            return;
+        }
         let evaluating_node = &self.current_node;
 
         let cost_to_current_node = self
@@ -139,12 +151,11 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
         }
     }
 
-    fn has_visited(&self, node: &str) -> Option<&str> {
-        // self.cost_tracker.iter().any(|(&x, _)| x == node)
-        self.cost_tracker
-            .iter()
-            .find(|&(&tracker_node, _)| tracker_node == node)
-            .map(|(&x, _)| x)
+    fn has_visited_all_nodes(&self) -> bool {
+        let network = self.route_request.target_network.keys().collect::<HashSet<_>>();
+        let processed = self.processed_nodes.iter().collect::<HashSet<_>>();
+
+        network == processed
     }
 
     // the finder should already know the node to evaluate
@@ -161,7 +172,10 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
 }
 
 // the run function can maybe said as a program's process archietecture
-pub fn run<'a, 'b>(route_request: RouteRequest<'a, 'b>) -> HashMap<&'a str, Option<u32>> {
+pub fn run<'a, 'b>(route_request: RouteRequest<'a, 'b>) -> HashMap<&'a str, Option<u32>>
+where
+    'b: 'a,
+{
     // helper variables to check whether the program processed every node in the given network
 
     // initiate
@@ -200,22 +214,23 @@ pub fn run<'a, 'b>(route_request: RouteRequest<'a, 'b>) -> HashMap<&'a str, Opti
     // format the output
 
     let mut finder = OptimalRouteFinder::new(route_request);
+    finder.initiate_finder();
+    let mut all_nodes_visited = finder.has_visited_all_nodes();
 
-    finder.set_next_processing_node();
-    finder.evaluate_path();
+    println!("before loop: {0:?}", finder.cost_tracker);
 
+    while !all_nodes_visited {
+        println!("current_node before setting next node: {:?}", finder.current_node_name);
+        finder.set_next_processing_node();
+        finder.evaluate_path();
+
+        println!("inside loop: {0:?}", finder.cost_tracker);
+        all_nodes_visited = finder.has_visited_all_nodes();
+    }
+
+    println!("final result: {0:?}", finder.cost_tracker);
     finder.cost_tracker
 }
-
-// compare with the list of input nodes and return true if it has
-/*
-fn has_visited_all_nodes(network_nodes: &[&str], processed_nodes: &[&str]) -> bool {
-    let network = network_nodes.iter().collect::<HashSet<_>>();
-    let processed = processed_nodes.iter().collect::<HashSet<_>>();
-
-    network == processed
-}
-*/
 
 #[cfg(test)]
 mod tests {
@@ -265,6 +280,7 @@ mod tests {
         assert_eq!(finder.current_node_name, Some("u"));
     }
 
+    // update `current_node`
     #[test]
     fn sets_current_node_to_cheaper_neighbor_of_current_node() {
         let mut finder = make_initiated_finder();
@@ -283,11 +299,6 @@ mod tests {
 
         assert_eq!(finder.current_node_name, None);
     }
-    /* commenting this test out. For my current network,
-     * this case cannot logically occur
-    #[test]
-    fn sets_current_node_to_non_visited_node_in_network() {}
-    */
 
     // tests for evaluate_path
     #[test]
@@ -299,7 +310,6 @@ mod tests {
 
         assert_eq!(finder.cost_tracker["z"], Some(7_u32));
     }
-    // test below is already acting like a run
     #[test]
     fn modify_trackers_when_processing_node_with_visited_node() {
         let mut finder = make_initiated_finder();
@@ -314,6 +324,19 @@ mod tests {
 
         assert_eq!(finder.cost_tracker["a"], Some(5_u32));
     }
+
+    // tests for OptimalRouteFinder::has_visited_all_nodes();
+    #[test]
+    fn returns_true_when_all_nodes_have_been_visited() {
+        let finder = make_finder_that_visited_all_nodes();
+        assert!(finder.has_visited_all_nodes());
+    }
+    #[test]
+    fn returns_false_when_there_are_not_yet_visited_nodes() {
+        let finder = make_initiated_finder();
+        assert!(!finder.has_visited_all_nodes());
+    }
+
     #[test]
     #[ignore]
     fn does_not_modify_trackers_when_processing_node_with_visited_node() {
@@ -326,19 +349,6 @@ mod tests {
 
         assert_eq!(finder.cost_tracker["a"], Some(5_u32));
         assert_eq!(finder.cost_tracker["f"], Some(7_u32));
-    }
-
-    #[test]
-    fn returns_node_name_on_visited_nodes() {
-        let cheapest_route_finder = make_finder();
-
-        assert_eq!(cheapest_route_finder.has_visited("a"), Some("a"));
-    }
-    #[test]
-    fn returns_none_on_unvisited_node() {
-        let cheapest_route_finder = make_finder();
-
-        assert_eq!(cheapest_route_finder.has_visited("finish"), None);
     }
 
     // helper functions
@@ -402,11 +412,11 @@ mod tests {
                 destination: "z",
                 target_network: get_network(),
             },
-            cost_tracker: HashMap::from([("a", Some(3)), ("b", Some(2))]),
-            route_tracker: HashMap::from([("a", Some("u")), ("b", Some("u"))]),
+            cost_tracker: HashMap::from([("a", Some(5)), ("b", Some(2)), ("z", Some(6))]),
+            route_tracker: HashMap::from([("a", Some("b")), ("b", Some("u")), ("z", Some("a"))]),
             current_node_name: None,
             current_node: HashMap::new(),
-            processed_nodes: get_network_nodes(),
+            processed_nodes: vec!["u", "b", "a", "z"],
         }
     }
 }
