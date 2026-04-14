@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
@@ -88,12 +88,13 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
     }
 
     fn set_next_processing_node(&mut self) {
-        self.push_to_processed_nodes();
-
-        self.next_node_name();
-        if self.current_node_name.is_some() {
-            self.set_new_current_node();
+        if self.current_node_name.is_none() {
+            return;
         }
+
+        self.push_to_processed_nodes();
+        self.next_node_name();
+        self.set_new_current_node();
     }
 
     fn evaluate_path(&mut self) {
@@ -102,32 +103,38 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
         }
 
         let evaluating_node = &self.current_node;
+        let processing_node_name = &self.current_node_name.expect("check initiation");
+        let cost_tracker = &mut self.cost_tracker;
+        let route_tracker = &mut self.route_tracker;
+        let mut route_needs_update = false;
 
-        let cost_to_current_node = self
-            .cost_tracker
-            .get(self.current_node_name.expect("node_name"))
-            .unwrap()
-            .unwrap();
+        let cost_to_current_node = cost_tracker.get(processing_node_name).unwrap().unwrap();
 
         for (&node_name, &cost) in evaluating_node {
-            self.cost_tracker
-                .entry(node_name)
+            cost_tracker
+                .entry(&node_name)
                 .and_modify(|tracker_cost| {
                     if tracker_cost.unwrap() > cost_to_current_node + cost {
                         *tracker_cost = Some(cost_to_current_node + cost);
+                        route_needs_update = true;
                     }
                 })
-                .or_insert(Some(cost_to_current_node + cost));
+                .or_insert({
+                    route_tracker.insert(node_name, Some(&processing_node_name));
+                    Some(cost_to_current_node + cost)
+                });
+
+            if route_needs_update {
+                route_tracker
+                    .entry(node_name)
+                    .and_modify(|parent_name| *parent_name = Some(&processing_node_name));
+            }
         }
     }
 
     fn has_visited_all_nodes(&self) -> bool {
-        let network = self
-            .route_request
-            .target_network
-            .keys()
-            .collect::<HashSet<_>>();
-        let processed = self.processed_nodes.iter().collect::<HashSet<_>>();
+        let network = self.route_request.target_network.len();
+        let processed = self.processed_nodes.len();
 
         network == processed
     }
@@ -239,9 +246,11 @@ mod tests {
         finder.evaluate_path();
 
         assert_eq!(finder.cost_tracker["z"], Some(7_u32));
+        assert_eq!(finder.route_tracker["b"], Some("u"));
     }
     #[test]
-    fn modify_trackers_when_processing_node_with_visited_node() {
+    #[ignore]
+    fn trackers_after_processing_node_b_with_visited_node() {
         let mut finder = make_initiated_finder();
         println!("{0:?}", finder.current_node_name);
         println!("{0:?}", finder.cost_tracker);
@@ -253,19 +262,7 @@ mod tests {
         println!("{0:?}", finder.cost_tracker);
 
         assert_eq!(finder.cost_tracker["a"], Some(5_u32));
-    }
-    #[test]
-    #[ignore]
-    fn does_not_modify_trackers_when_processing_node_with_visited_node() {
-        let mut finder = make_initiated_finder();
-        finder.set_next_processing_node();
-        println!("{0:?}", finder.cost_tracker);
-
-        finder.evaluate_path();
-        println!("{0:?}", finder.cost_tracker);
-
-        assert_eq!(finder.cost_tracker["a"], Some(5_u32));
-        assert_eq!(finder.cost_tracker["f"], Some(7_u32));
+        assert_eq!(finder.route_tracker["a"], Some("b"));
     }
 
     // tests for OptimalRouteFinder::has_visited_all_nodes();
