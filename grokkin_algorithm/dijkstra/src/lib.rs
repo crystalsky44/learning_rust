@@ -112,7 +112,7 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
 
         for (&node_name, &cost) in evaluating_node {
             cost_tracker
-                .entry(&node_name)
+                .entry(node_name)
                 .and_modify(|tracker_cost| {
                     if tracker_cost.unwrap() > cost_to_current_node + cost {
                         *tracker_cost = Some(cost_to_current_node + cost);
@@ -120,14 +120,14 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
                     }
                 })
                 .or_insert({
-                    route_tracker.insert(node_name, Some(&processing_node_name));
+                    route_tracker.insert(node_name, Some(processing_node_name));
                     Some(cost_to_current_node + cost)
                 });
 
             if route_needs_update {
                 route_tracker
                     .entry(node_name)
-                    .and_modify(|parent_name| *parent_name = Some(&processing_node_name));
+                    .and_modify(|parent_name| *parent_name = Some(processing_node_name));
             }
         }
     }
