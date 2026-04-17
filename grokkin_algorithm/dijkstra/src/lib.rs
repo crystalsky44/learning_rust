@@ -4,16 +4,14 @@ type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
 pub struct RouteRequest<'a, 'b> {
     source: &'b str,
-    destination: &'b str,
     target_network: Network<'a>,
 }
 
 impl<'a, 'b> RouteRequest<'a, 'b> {
-    pub fn new(target_network: Network<'a>, source: &'b str, destination: &'b str) -> Self {
+    pub fn new(target_network: Network<'a>, source: &'b str) -> Self {
         RouteRequest {
             target_network,
             source,
-            destination,
         }
     }
 }
@@ -139,15 +137,15 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
 
         network == processed
     }
+
+    pub fn print_trackers(&self) {
+        println!("cost_tracker: {:?}", self.cost_tracker);
+        println!("route_tracker: {:?}", self.route_tracker);
+    }
 }
 
 // the run function can maybe said as a program's process archietecture
-pub fn run<'a, 'b>(
-    route_request: RouteRequest<'a, 'b>,
-) -> (
-    HashMap<&'a str, Option<u32>>,
-    HashMap<&'a str, Option<&'a str>>,
-)
+pub fn run<'a, 'b>(route_request: RouteRequest<'a, 'b>) -> OptimalRouteFinder<'a, 'b>
 where
     'b: 'a,
 {
@@ -163,7 +161,7 @@ where
         all_nodes_visited = finder.has_visited_all_nodes();
     }
 
-    (finder.cost_tracker, finder.route_tracker)
+    finder
 }
 
 #[cfg(test)]

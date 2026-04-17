@@ -1,14 +1,10 @@
-/// below are *Translation* of Dijkstra Algorithm's
-/// pseudo code in Grokking Algorithm
+use dijkstra::RouteRequest;
 use std::collections::HashMap;
-
-use dijkstra::{RouteRequest, run};
 
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
 fn main() {
     let source = "u";
-    let destination = "z";
 
     // create Network
     let network: Network = HashMap::from([
@@ -18,7 +14,8 @@ fn main() {
         ("z", HashMap::new()),
     ]);
 
-    let route_request = RouteRequest::new(network, source, destination);
+    let route_request = RouteRequest::new(network, source);
 
-    let reuslt = run(route_request);
+    let result = dijkstra::run(route_request);
+    result.print_trackers();
 }
