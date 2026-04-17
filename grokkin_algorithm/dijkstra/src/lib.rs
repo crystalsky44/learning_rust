@@ -2,13 +2,13 @@ use std::collections::HashMap;
 
 type Network<'a> = HashMap<&'a str, HashMap<&'a str, u32>>;
 
-pub struct RouteRequest<'a, 'b> {
-    source: &'b str,
+pub struct RouteRequest<'a> {
+    source: &'a str,
     target_network: Network<'a>,
 }
 
-impl<'a, 'b> RouteRequest<'a, 'b> {
-    pub fn new(target_network: Network<'a>, source: &'b str) -> Self {
+impl<'a> RouteRequest<'a> {
+    pub fn new(target_network: Network<'a>, source: &'a str) -> Self {
         RouteRequest {
             target_network,
             source,
@@ -16,8 +16,8 @@ impl<'a, 'b> RouteRequest<'a, 'b> {
     }
 }
 
-pub struct OptimalRouteFinder<'a, 'b> {
-    route_request: RouteRequest<'a, 'b>,
+pub struct OptimalRouteFinder<'a> {
+    route_request: RouteRequest<'a>,
     cost_tracker: HashMap<&'a str, Option<u32>>,
     route_tracker: HashMap<&'a str, Option<&'a str>>,
     current_node_name: Option<&'a str>,
@@ -25,8 +25,8 @@ pub struct OptimalRouteFinder<'a, 'b> {
     processed_nodes: Vec<&'a str>,
 }
 
-impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
-    pub fn new(find_route: RouteRequest<'a, 'b>) -> Self {
+impl<'a> OptimalRouteFinder<'a> {
+    pub fn new(find_route: RouteRequest<'a>) -> Self {
         OptimalRouteFinder {
             route_request: find_route,
             cost_tracker: HashMap::new(),
@@ -37,10 +37,7 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
         }
     }
 
-    fn initiate(&mut self)
-    where
-        'b: 'a,
-    {
+    fn initiate(&mut self) {
         let source_neighbors = self
             .route_request
             .target_network
@@ -145,10 +142,7 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
 }
 
 // the run function can maybe said as a program's process archietecture
-pub fn run<'a, 'b>(route_request: RouteRequest<'a, 'b>) -> OptimalRouteFinder<'a, 'b>
-where
-    'b: 'a,
-{
+pub fn run<'a>(route_request: RouteRequest<'a>) -> OptimalRouteFinder<'a> {
     let mut finder = OptimalRouteFinder::new(route_request);
     finder.initiate();
 
@@ -174,9 +168,7 @@ mod tests {
         let cheapest_finder = OptimalRouteFinder::new(make_route_request());
 
         let source = cheapest_finder.route_request.source;
-        let destination = cheapest_finder.route_request.destination;
         assert_eq!(source, "u");
-        assert_eq!(destination, "z");
 
         let source_neighbors = cheapest_finder
             .route_request
@@ -286,18 +278,16 @@ mod tests {
         ])
     }
 
-    fn make_route_request() -> RouteRequest<'static, 'static> {
+    fn make_route_request() -> RouteRequest<'static> {
         RouteRequest {
             source: ("u"),
-            destination: ("z"),
             target_network: get_network(),
         }
     }
 
-    fn make_initiated_finder() -> OptimalRouteFinder<'static, 'static> {
+    fn make_initiated_finder() -> OptimalRouteFinder<'static> {
         let route_request = RouteRequest {
             source: ("u"),
-            destination: ("z"),
             target_network: get_network(),
         };
         let mut finder = OptimalRouteFinder::new(route_request);
@@ -306,11 +296,10 @@ mod tests {
         finder
     }
 
-    fn make_finder_that_visited_all_nodes() -> OptimalRouteFinder<'static, 'static> {
+    fn make_finder_that_visited_all_nodes() -> OptimalRouteFinder<'static> {
         OptimalRouteFinder {
             route_request: RouteRequest {
                 source: "u",
-                destination: "z",
                 target_network: get_network(),
             },
             cost_tracker: HashMap::from([("a", Some(5)), ("b", Some(2)), ("z", Some(6))]),

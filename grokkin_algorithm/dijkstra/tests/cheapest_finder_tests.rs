@@ -16,7 +16,7 @@ fn result_should_contain_the_final_state_of_cost_tracker_after_loop_terminates()
         ("z", HashMap::new()),
     ]);
 
-    let route_request = RouteRequest::new(network, source, destination);
+    let route_request = RouteRequest::new(network, source);
 
     let finder = dijkstra::run(route_request);
     finder.print_trackers();
