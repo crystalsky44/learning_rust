@@ -78,6 +78,7 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
         let Some(current_node_name) = self.current_node_name else {
             return;
         };
+
         let Some(next_node) = self.route_request.target_network.get(current_node_name) else {
             self.current_node = HashMap::new();
             return;
@@ -102,12 +103,12 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
         }
 
         let evaluating_node = &self.current_node;
-        let processing_node_name = &self.current_node_name.expect("check initiation");
+        let current_node_name = &self.current_node_name.expect("check initiation");
         let cost_tracker = &mut self.cost_tracker;
         let route_tracker = &mut self.route_tracker;
         let mut route_needs_update = false;
 
-        let cost_to_current_node = cost_tracker.get(processing_node_name).unwrap().unwrap();
+        let cost_to_current_node = cost_tracker.get(current_node_name).unwrap().unwrap();
 
         for (&node_name, &cost) in evaluating_node {
             cost_tracker
@@ -126,8 +127,8 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
             if route_needs_update {
                 route_tracker
                     .entry(node_name)
-                    .and_modify(|parent_name| *parent_name = Some(processing_node_name))
-                    .or_insert(Some(processing_node_name));
+                    .and_modify(|parent_name| *parent_name = Some(current_node_name))
+                    .or_insert(Some(current_node_name));
             }
         }
     }
