@@ -148,7 +148,7 @@ pub fn run<'a>(route_request: RouteRequest<'a>) -> OptimalRouteFinder<'a> {
     let mut finder = OptimalRouteFinder::new(route_request);
     finder.initiate();
 
-    let mut all_nodes_visited = finder.has_visited_all_nodes();
+    let mut all_nodes_visited = false;
 
     while !all_nodes_visited {
         finder.set_next_processing_node();
