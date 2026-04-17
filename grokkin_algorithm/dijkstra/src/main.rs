@@ -17,5 +17,5 @@ fn main() {
     let route_request = RouteRequest::new(network, source);
 
     let result = dijkstra::run(route_request);
-    result.print_trackers();
+    result.print();
 }

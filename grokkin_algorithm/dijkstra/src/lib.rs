@@ -137,7 +137,7 @@ impl<'a> OptimalRouteFinder<'a> {
         network == processed
     }
 
-    pub fn print_trackers(&self) {
+    pub fn print(&self) {
         println!("cost_tracker: {:?}", self.cost_tracker);
         println!("route_tracker: {:?}", self.route_tracker);
     }
