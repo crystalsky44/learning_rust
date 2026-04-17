@@ -106,18 +106,19 @@ impl<'a> OptimalRouteFinder<'a> {
 
         let cost_to_current_node = cost_tracker.get(current_node_name).unwrap().unwrap();
 
-        for (&neighbor_node_name, &cost) in current_node {
+        for (&neighbor_node_name, &cost_to_neighbor) in current_node {
+            let cost_to_neighbor_from_source = cost_to_current_node + cost_to_neighbor;
             cost_tracker
                 .entry(neighbor_node_name)
                 .and_modify(|tracker_cost| {
-                    if tracker_cost.unwrap() > cost_to_current_node + cost {
+                    if tracker_cost.unwrap() > cost_to_neighbor_from_source {
                         route_needs_update = true;
-                        *tracker_cost = Some(cost_to_current_node + cost);
+                        *tracker_cost = Some(cost_to_neighbor_from_source);
                     }
                 })
                 .or_insert({
                     route_needs_update = true;
-                    Some(cost_to_current_node + cost)
+                    Some(cost_to_neighbor_from_source)
                 });
 
             if route_needs_update {
