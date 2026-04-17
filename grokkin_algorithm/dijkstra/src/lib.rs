@@ -150,17 +150,11 @@ where
     finder.initiate();
 
     let mut all_nodes_visited = finder.has_visited_all_nodes();
-    println!("before loop: {0:?}", finder.cost_tracker);
 
     while !all_nodes_visited {
-        println!(
-            "current_node before setting next node: {:?}",
-            finder.current_node_name
-        );
         finder.set_next_processing_node();
         finder.evaluate_path();
 
-        println!("inside loop: {0:?}", finder.cost_tracker);
         all_nodes_visited = finder.has_visited_all_nodes();
     }
 
