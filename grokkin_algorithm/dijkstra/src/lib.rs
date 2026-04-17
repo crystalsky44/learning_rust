@@ -110,10 +110,10 @@ impl<'a> OptimalRouteFinder<'a> {
             let cost_to_neighbor_from_source = cost_to_current_node + cost_to_neighbor;
             cost_tracker
                 .entry(neighbor_node_name)
-                .and_modify(|tracker_cost| {
-                    if tracker_cost.unwrap() > cost_to_neighbor_from_source {
+                .and_modify(|cost_in_tracker| {
+                    if cost_in_tracker.unwrap() > cost_to_neighbor_from_source {
                         route_needs_update = true;
-                        *tracker_cost = Some(cost_to_neighbor_from_source);
+                        *cost_in_tracker = Some(cost_to_neighbor_from_source);
                     }
                 })
                 .or_insert({
