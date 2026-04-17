@@ -75,11 +75,10 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
 
     // sequentially coupled to fn next_processing_node_name
     fn set_new_current_node(&mut self) {
-        let Some(next_node) = self
-            .route_request
-            .target_network
-            .get(self.current_node_name.unwrap())
-        else {
+        let Some(current_node_name) = self.current_node_name else {
+            return;
+        };
+        let Some(next_node) = self.route_request.target_network.get(current_node_name) else {
             self.current_node = HashMap::new();
             return;
         };
@@ -165,6 +164,7 @@ where
     }
 
     println!("final result: {0:?}", finder.cost_tracker);
+    println!("final result: {0:?}", finder.route_tracker);
     finder.cost_tracker
 }
 
@@ -250,17 +250,19 @@ mod tests {
         assert_eq!(finder.route_tracker["b"], Some("u"));
     }
     #[test]
-    #[ignore]
     fn trackers_after_processing_node_b_with_visited_node() {
         let mut finder = make_initiated_finder();
         println!("{0:?}", finder.current_node_name);
         println!("{0:?}", finder.cost_tracker);
+        println!("{0:?}", finder.route_tracker);
+
         finder.set_next_processing_node();
         println!("{0:?}", finder.current_node_name);
         println!("{0:?}", finder.current_node);
 
         finder.evaluate_path();
         println!("{0:?}", finder.cost_tracker);
+        println!("{0:?}", finder.route_tracker);
 
         assert_eq!(finder.cost_tracker["a"], Some(5_u32));
         assert_eq!(finder.route_tracker["a"], Some("b"));
