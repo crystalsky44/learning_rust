@@ -142,7 +142,12 @@ impl<'a, 'b> OptimalRouteFinder<'a, 'b> {
 }
 
 // the run function can maybe said as a program's process archietecture
-pub fn run<'a, 'b>(route_request: RouteRequest<'a, 'b>) -> HashMap<&'a str, Option<u32>>
+pub fn run<'a, 'b>(
+    route_request: RouteRequest<'a, 'b>,
+) -> (
+    HashMap<&'a str, Option<u32>>,
+    HashMap<&'a str, Option<&'a str>>,
+)
 where
     'b: 'a,
 {
@@ -158,9 +163,7 @@ where
         all_nodes_visited = finder.has_visited_all_nodes();
     }
 
-    println!("final result: {0:?}", finder.cost_tracker);
-    println!("final result: {0:?}", finder.route_tracker);
-    finder.cost_tracker
+    (finder.cost_tracker, finder.route_tracker)
 }
 
 #[cfg(test)]
