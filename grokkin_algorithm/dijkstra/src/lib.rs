@@ -65,6 +65,7 @@ impl<'a> OptimalRouteFinder<'a> {
             .iter()
             .min_by(|&(_, acc_cost), &(_, e_cost)| acc_cost.cmp(e_cost))
             .map(|(&node_name, _)| node_name);
+
         self.current_node_name = cheaper_node;
     }
 
@@ -97,7 +98,7 @@ impl<'a> OptimalRouteFinder<'a> {
             return;
         }
 
-        let evaluating_node = &self.current_node;
+        let current_node = &self.current_node;
         let current_node_name = &self.current_node_name.expect("check initiation");
         let cost_tracker = &mut self.cost_tracker;
         let route_tracker = &mut self.route_tracker;
@@ -105,9 +106,9 @@ impl<'a> OptimalRouteFinder<'a> {
 
         let cost_to_current_node = cost_tracker.get(current_node_name).unwrap().unwrap();
 
-        for (&node_name, &cost) in evaluating_node {
+        for (&neighbor_node_name, &cost) in current_node {
             cost_tracker
-                .entry(node_name)
+                .entry(neighbor_node_name)
                 .and_modify(|tracker_cost| {
                     if tracker_cost.unwrap() > cost_to_current_node + cost {
                         route_needs_update = true;
@@ -121,7 +122,7 @@ impl<'a> OptimalRouteFinder<'a> {
 
             if route_needs_update {
                 route_tracker
-                    .entry(node_name)
+                    .entry(neighbor_node_name)
                     .and_modify(|parent_name| *parent_name = Some(current_node_name))
                     .or_insert(Some(current_node_name));
             }
